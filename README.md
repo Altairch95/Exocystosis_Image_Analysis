@@ -92,7 +92,7 @@ From the input images, the program runs through different steps: **image preproc
     - Select spots in W1 and W2 based on distance to the closest neighbour spot (min distance: 9 px).
     - Select spots in W1 and W2 based on the goodness of the gaussian fit, after fiting spot intensitites to a gaussian distribution.
     - Select spots in W1 and W2 based on a density probability estimation (KDE), assuming that here we discard all spots that are not "in focus".
-    - Outlier rejection: fitting the final distribution of distances to a non-gaussian distribution described in Chuurchman et al.,2006.
+    - Outlier rejection: fitting the final distribution of distances to a non-gaussian distribution described in [Churchman et al.,2006](https://duckduckgo.com) .
 
 
 ### Tutorial
