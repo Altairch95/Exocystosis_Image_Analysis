@@ -10,7 +10,7 @@ What is it?
 
 ### Download 
 
-1) Clone the git repo in your local computer and get into the folder, or:
+1) Download the git repo in your local computer and get into the folder, or run:
 
 ```bash
   $ git clone https://github.com/Altairch95/Exocystosis_Image_Analysis
@@ -82,9 +82,9 @@ This program needs an input of brightfield TIFF images (central quadrant, 16-bit
   - Channel 1: Red channel    (W1)
   - Channel 2: Green channel  (W2)
   
-From the input images, the program runs through different steps: **image preprocesing**, **Spot Detection** (Trackpy), and **Spot selection.**
+From the input images, the program runs through different steps: **image preprocesing**, **Spot Detection** (Trackpy), **Spot selection** and **outlier rejection**.
 
-* Input images are first preprocessed with a *background subtraction* and *median filter* to reduce the background noise of the images. 
+* Input images are first preprocessed with a *background subtraction* and *median filter* algorithm to reduce the extracellular and citoplasmic noise of the images. 
 * Chromatic aberration correction using synthetic beads. Beads in W1 (red) are aligned to beads of W2 (green, reference).
 * Spot Detection and linking using trackpy, to detect and link bright spots of radius ~ 5nm in both channels.
 * Spot selection:
@@ -92,8 +92,7 @@ From the input images, the program runs through different steps: **image preproc
     - Select spots in W1 and W2 based on distance to the closest neighbour spot (min distance: 9 px).
     - Select spots in W1 and W2 based on the goodness of the gaussian fit, after fiting spot intensitites to a gaussian distribution.
     - Select spots in W1 and W2 based on a density probability estimation (KDE), assuming that here we discard all spots that are not "in focus".
-    - Outlier rejection.
-
+    - Outlier rejection: fitting the final distribution of distances to a non-gaussian distribution described in Chuurchman et al.,2006.
 
 
 ### Tutorial
@@ -116,5 +115,6 @@ sla2 C-terminal within the sla2 folder.
 
 
 ### Output Example
+
 
 
