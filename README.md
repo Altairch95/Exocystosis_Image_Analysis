@@ -1,5 +1,5 @@
 # PICT-MOD
-===========
+----------
 ## Sub-pixel distance estimation between fluorohores using live-cell imaging.
 
 What is it?
@@ -16,7 +16,10 @@ What is it?
   $ git clone https://github.com/Altairch95/Exocystosis_Image_Analysis
   $ cd Exocystosis_Image_Analysis
  ```
-2) Create a conda environment with python3.7.7:
+2) Downloading the Weights
+We need the pre-trained weights for the neural network of YeastSpotter, which are too large to share on GitHub. You can grab them from our webserver as a zip file (http://hershey.csb.utoronto.ca/weights.zip) or from Zenodo (https://zenodo.org/record/3598690).
+
+3) Create a conda environment with python3.7.7:
 
 ```bash
   $ conda create -n {ENV_NAME} python=3.7.7 anaconda
@@ -110,3 +113,8 @@ Then, you can run the following command:
 
 By default, if not specified in the options.py file, the program will run a test with 
 sla2 C-terminal within the sla2 folder.
+
+
+### Output Example
+
+
