@@ -1,0 +1,85 @@
+2022-07-29 03:21:44,345 
+
+############################
+Image Analysis for LiveCellPICT 
+################################
+
+	Dataset: sla2/sla2_C
+	Working directory: ../sla2/sla2_C/
+	Input directory: ../sla2/sla2_C/input/
+	Output directory: ../sla2/sla2_C/output/
+
+
+2022-07-29 03:21:44,345 
+
+#######################
+Initializing Preprocessing 
+############################
+
+
+2022-07-29 03:21:47,963 OME series: not an ome-tiff master file
+2022-07-29 03:21:47,970 OME series: not an ome-tiff master file
+2022-07-29 03:21:47,973 OME series: not an ome-tiff master file
+2022-07-29 03:21:47,977 OME series: not an ome-tiff master file
+2022-07-29 03:21:47,979 OME series: not an ome-tiff master file
+2022-07-29 03:21:47,982 OME series: not an ome-tiff master file
+2022-07-29 03:21:47,984 OME series: not an ome-tiff master file
+2022-07-29 03:21:47,990 OME series: not an ome-tiff master file
+2022-07-29 03:21:47,992 OME series: not an ome-tiff master file
+2022-07-29 03:21:53,390 OME series: not an ome-tiff master file
+2022-07-29 03:21:53,392 OME series: not an ome-tiff master file
+2022-07-29 03:21:58,895 OME series: not an ome-tiff master file
+2022-07-29 03:21:58,903 OME series: not an ome-tiff master file
+2022-07-29 03:21:58,904 OME series: not an ome-tiff master file
+2022-07-29 03:21:58,906 OME series: not an ome-tiff master file
+2022-07-29 03:21:58,960 OME series: not an ome-tiff master file
+2022-07-29 03:22:02,305 OME series: not an ome-tiff master file
+2022-07-29 03:22:02,315 OME series: not an ome-tiff master file
+2022-07-29 03:22:05,665 OME series: not an ome-tiff master file
+2022-07-29 03:22:05,940 OME series: not an ome-tiff master file
+2022-07-29 03:22:05,943 OME series: not an ome-tiff master file
+2022-07-29 03:22:05,945 OME series: not an ome-tiff master file
+2022-07-29 03:22:05,947 OME series: not an ome-tiff master file
+2022-07-29 03:22:05,948 OME series: not an ome-tiff master file
+2022-07-29 03:22:05,951 OME series: not an ome-tiff master file
+2022-07-29 03:22:05,953 OME series: not an ome-tiff master file
+2022-07-29 03:22:05,957 OME series: not an ome-tiff master file
+2022-07-29 03:22:05,959 OME series: not an ome-tiff master file
+2022-07-29 03:22:11,638 OME series: not an ome-tiff master file
+2022-07-29 03:22:11,642 OME series: not an ome-tiff master file
+2022-07-29 03:22:18,342 OME series: not an ome-tiff master file
+2022-07-29 03:22:18,350 OME series: not an ome-tiff master file
+2022-07-29 03:22:18,352 OME series: not an ome-tiff master file
+2022-07-29 03:22:18,354 OME series: not an ome-tiff master file
+2022-07-29 03:22:18,356 OME series: not an ome-tiff master file
+2022-07-29 03:22:21,773 OME series: not an ome-tiff master file
+2022-07-29 03:22:21,782 OME series: not an ome-tiff master file
+2022-07-29 03:22:25,128 OME series: not an ome-tiff master file
+2022-07-29 03:22:25,383 OME series: not an ome-tiff master file
+2022-07-29 03:22:25,386 OME series: not an ome-tiff master file
+2022-07-29 03:22:25,388 OME series: not an ome-tiff master file
+2022-07-29 03:22:25,389 OME series: not an ome-tiff master file
+2022-07-29 03:22:25,392 OME series: not an ome-tiff master file
+2022-07-29 03:22:25,394 OME series: not an ome-tiff master file
+2022-07-29 03:22:25,397 OME series: not an ome-tiff master file
+2022-07-29 03:22:25,401 OME series: not an ome-tiff master file
+2022-07-29 03:22:25,403 OME series: not an ome-tiff master file
+2022-07-29 03:23:45,960 
+
+############################
+Image Analysis for LiveCellPICT 
+################################
+
+	Dataset: sla2/sla2_C
+	Working directory: ../sla2/sla2_C/
+	Input directory: ../sla2/sla2_C/input/
+	Output directory: ../sla2/sla2_C/output/
+
+
+2022-07-29 03:23:45,960 
+
+#######################
+Initializing Preprocessing 
+############################
+
+
