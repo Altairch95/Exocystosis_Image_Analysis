@@ -16,7 +16,8 @@ What is it?
   $ git clone https://github.com/Altairch95/Exocystosis_Image_Analysis
   $ cd Exocystosis_Image_Analysis
  ```
-2) Downloading the Weights
+2) Downloading the weights for yeast cell segmenetation
+
 We need the pre-trained weights for the neural network of YeastSpotter, which are too large to share on GitHub. You can grab them from our webserver as a zip file (http://hershey.csb.utoronto.ca/weights.zip) or from Zenodo (https://zenodo.org/record/3598690).
 
 3) Create a conda environment with python3.7.7:
