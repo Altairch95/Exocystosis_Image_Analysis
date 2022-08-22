@@ -67,21 +67,25 @@ The package has the following structure:
                   beads/
           
 
-* README.md: the files containing the tutorial and information about our application.
-* scripts: a fold with the following scripts:
+* README.md: the tutorial and information about our application.
+* scripts: a folder with the following scripts:
   - measure_pict_distances.py: the command-line script to launch the program.
   - custom.py: a module requiered by measure_pict_distances.py where are defined the classes of the program.
   - calculate_PICT_distances.py: a module required by measure_pict_distances.py where are defined the functions of the program.
   - options.py: file with parameters to modify by the user to run the program (see tutorial).
   
-* sla2: a directory with two input datasets that serve as input to test the program.
+* sla2 (Test): a directory with two input datasets that serve as input to test the program.
 
+-----
+
+Tutorial
+--------
 
 ### Input Files
 
 This program needs an input of brightfield TIFF images (central quadrant, 16-bit) captured as stacks of two channels: 
-  - Channel 1: Red channel    (W1)
-  - Channel 2: Green channel  (W2)
+  - Channel 1: Red channel    (W1) --> observing RFP spots.
+  - Channel 2: Green channel  (W2) --> observing GFP spots.
   
 From the input images, the program runs through different steps: **image preprocesing**, **Spot Detection** (Trackpy), **Spot selection** and **outlier rejection**.
 
