@@ -7,15 +7,17 @@
 - [Instructions](#instructions)
   - [Use Colab](#use-colab)
   - [Run it locally](#run-it-locally)
-- [Tutorial](#tutorial)
+- [Notebooks](#notebooks)
 - [Notes](#notes)
+  - [Note 1: Input files](#note-1-input-files-beads-and-pict-images)
+  - [Note 2: Running the Software](#note-2-running-the-software)
 
 <!-- /TOC -->
 
 What is it?
 -----------
 
-**PICT-MODELLER** is a Python-based software that provide the tools to model the near-physiological 3D architecture of 
+**PICT-MODELLER** is a Python-based software that provides the tools to model the near-physiological 3D architecture of 
 protein assemblies. This software is the Python implementation of our previous work 
 [Picco A., et al, 2017](https://www.sciencedirect.com/science/article/pii/S0092867417300521) where we combined 
 [PICT](https://www.sciencedirect.com/science/article/pii/S0092867417300521) (yeast engineering & live-cell imaging)
@@ -53,9 +55,7 @@ You will need a machine running Linux, it does not support other operating syste
   $ git clone https://github.com/Altairch95/PICT-MODELLER
   $ cd PICT-MODELLER
  ```
-2) Download weights
-
-PICT-MODELLER utilizes the pre-trained weights for the neural network that is used for yeast cell segmentation in 
+2) Download weights: PICT-MODELLER utilizes the pre-trained weights for the neural network that is used for yeast cell segmentation in 
 [Yeast Spotter](http://yeastspotter.csb.utoronto.ca/). The weights are necessary to run the software, but are too large
  to share on GitHub. You can download the zip file from this [Zenodo](https://zenodo.org/record/3598690) repository. 
 
@@ -74,7 +74,7 @@ Once downloaded, simply unzip it and move it to the *scripts/* directory. You ca
  ```
 
 4) Install the requirements listed in *requirements.txt*:
-5) 
+
 ```bash
   $ pip install -r requirements.txt
  ```
@@ -185,9 +185,10 @@ Run the software:
 
 You may grab a coffee while waiting for the results :)
 
-Tutorial
+Notebooks
 --------
 
+To be filled.
 
 Notes
 --------
@@ -264,8 +265,12 @@ of the pixel fluorescence intensity in each spot. A 2D gaussian must thus fit we
 a goodness of gaussian fit on each GFP and RFP spot pairs and retained only the spot pairs with an 
 <i>R<sup>2</sup></i> > 0.35
 
-- *MLE and outlier rejection*: 
+- *MLE and outlier rejection*: The distribution of distance measurements should approximate this skewed distribution
+
+$$ p(d) = \( \frac{d}{2 \pi \sigma²} \) $$
 
 
-In this section we make a brief explanation of how to use Exocystosis_Image_Analysis.
+
+
+
 
