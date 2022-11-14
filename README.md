@@ -217,11 +217,12 @@ From the input images, the program runs through different steps:
 
 ##### 1) **Beads Registration**:
 - Bead registration: isolated beads are detected for each channel. Agglomerations of beads, or beads shinning with
-   low intensity are excluded based on the 0-th moment $$M_{00}$$ of brightness (excluding the beads with an /(M_{00}/)
+   low intensity are excluded based on the 0-th moment \\(M_{00}\\) of brightness (excluding the beads with an \\(M_{00}\\)
    falling on the 1st and 95th percentile).
 - Bead transformation: selected beads are transformed (aligned) and the transformation matrix is saved. For the 
    alignment, beads selected in W1 (red, mov) are aligned to the beads selected in W2 (green, reference).
-        > Explanation: because we are imaging the same beads on the red and green channel, the XY coordinates should not
+        
+    > Explanation: because we are imaging the same beads on the red and green channel, the XY coordinates should not
         change. However, because we are imaging at different wavelengths, each channel will refract the light differently
       (the refractive index of the lens varies with wavelength). The inability of the lens to bring the green and red 
        spots into a common focus results in a slightly different image size and focal point for each wavelength. This 
