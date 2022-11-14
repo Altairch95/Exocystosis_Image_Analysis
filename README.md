@@ -1,11 +1,11 @@
-# PICT-MOD
+# PICT-MODELLER
 ----------
 ## Sub-pixel distance estimation between fluorohores using live-cell imaging.
 
 What is it?
 -----------
 
-**PICT-MOD** is a Python package (will be) for estimating distances between fluorophores flagging the termini of protein complexes of interest with a 2 - 5 nm precision. 
+**PICT-MODELLER** is a set of Python scripts that allow for the estimation of distances between fluorophores flagging the termini of protein complexes of interest. As input, it uses  
 
 
 ### Download 
