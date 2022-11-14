@@ -38,7 +38,7 @@ Instructions
 -----------
 ### Use Colab
 
-You can use <a href=https://colab.research.google.com/drive/1kSOnZdwRb4xuznyQIpRNWUBBFKms91M8?usp=sharing>PICT Colab</a>
+You can use [PICT Colab](https://colab.research.google.com/drive/1kSOnZdwRb4xuznyQIpRNWUBBFKms91M8?usp=sharing)
 to run the image analysis and modeling scripts without the need of installation. 
 
 ### Run it locally
