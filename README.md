@@ -192,7 +192,7 @@ Tutorial
 Notes
 --------
 
-#### Note 1: Input files (Beads and PICT images)
+### Note 1: Input files (Beads and PICT images)
 
 This program needs an input of bright-field TIFF images (central quadrant, 16-bit) captured as stacks of two channels: 
 
@@ -211,15 +211,17 @@ red channel, and **W2** for the green channel.
 stack of red/green channels. Diffraction-limited spots should be visualized when opening the image with ImageJ or any 
 other image processing software. 
 
-#### Note 2: Running the software
+### Note 2: Running the software
 
 From the input images, the program runs through different steps: 
 
-##### 1) **Beads Registration**:
-- Bead registration: isolated beads are detected for each channel. Agglomerations of beads, or beads shinning with
-   low intensity are excluded based on the 0-th moment <i>M<sub>00</<sub></i> of brightness (excluding the beads with an 
-   <i>M<sub>00</<sub></i> falling on the *1st* and *95th* percentile).
-- Bead transformation: selected beads are transformed (aligned) and the transformation matrix is saved. For the 
+#### 1) **Beads Registration**:
+
+- *Bead registration*: isolated beads are detected for each channel. Agglomerations of beads, or beads shinning with
+   low intensity are excluded based on the 0-th moment <i>M<sub>00</sub></i> of brightness (mass) (excluding the beads 
+   with a <i>M<sub>00</sub></i> falling on the *1st* and *95th* percentile).
+
+- *Bead transformation*: selected beads are transformed (aligned) and the transformation matrix is saved. For the 
    alignment, beads selected in W1 (red, mov) are aligned to the beads selected in W2 (green, reference).
         
     > Explanation: because we are imaging the same beads on the red and green channel, the XY coordinates should not
@@ -228,46 +230,42 @@ From the input images, the program runs through different steps:
        spots into a common focus results in a slightly different image size and focal point for each wavelength. This 
        artifact is commonly known as chromatic aberration, and must be corrected.
 
-##### 2) **Image pre-procesing**:
-- Background subtraction: Raw PICT images are corrected for the extracellular noise using the Rolling-Ball 
+#### 2) **Image pre-procesing**:
+
+- *Background subtraction*: Raw PICT images are corrected for the extracellular noise using the Rolling-Ball 
    algorithm. The size for estimating the rolling ball kernel is based on the maximum separation between two yeast 
    cells (a radius around 70 px.)
-- Median filter: correction for the intracellular noise is also applied with a median filter of 10 px.
+
+- *Median filter*: correction for the intracellular noise is also applied with a median filter of 10 px.
    
-##### 3) **Spot Detection**: 
-    - 
-4) **Spot selection** 
-5) **Outlier rejection**
+#### 3) **Spot Detection**:
 
+Diffraction limited spots are detected using [Trackpy](http://soft-matter.github.io/trackpy/). After detection, the spots 
+from W1 and W2 channels falling in a maximum range of 1 px are linked (paired). From this step on, each pair will be 
+analysed as a couple of red-green spots on the spot selection step.
 
-* Input images are first preprocessed with a *background subtraction* and *median filter* algorithm to reduce the extracellular and citoplasmic noise of the images. 
-* Chromatic aberration correction using synthetic beads. Beads in W1 (red) are aligned to beads of W2 (green, reference).
-* Spot Detection and linking using trackpy, to detect and link bright spots of radius ~ 5nm in both channels.
-* Spot selection:
-    - Select spots in W1 and W2 based on distance to the contour of the cell (max distance: 8 - 10 px).
-    - Select spots in W1 and W2 based on distance to the closest neighbour spot (min distance: 9 px).
-    - Select spots in W1 and W2 based on the goodness of the gaussian fit, after fiting spot intensitites to a gaussian distribution.
-    - Select spots in W1 and W2 based on a density probability estimation (KDE), assuming that here we discard all spots that are not "in focus".
-    - Outlier rejection: fitting the final distribution of distances to a non-gaussian distribution described in [Churchman et al.,2006](https://duckduckgo.com) .
+#### 4) **Spot selection**:
+
+The following steps are meant to refine the dataset and reject as many noisy centroid positions as possible. 
+
+- *Selection of isolated spots close to the cell perimeter*: only isolated pairs close to the anchor sites (located in the 
+plasma membrane) are select. Here, yeast cell segmentation is applied to sort spots falling to far from the plasma 
+membrane, close to the neck of yeast cells, or too close to its closest neighbour.
+
+- *Selection of the spots in focus*: detected pairs (couples) of spots are analysed according to the second moment <i>m<sub>2</sub></i> of 
+brightness (size) and eccentricity. We assume that the majority of the spots are in focus. The spots in focus will thus 
+cluster in a two-dimensional space defined by the second moments of brightness and the eccentricity for each GFP and RFP 
+spot pairs. The clustering spots are identified with a 2D binned kernel density estimate (KDE) setting a threshold of 50% 
+or higher of total probability to select the most likely pair of spots to be found in the population. The spots selected 
+are those clustering in both the GFP and the RFP channels.
+
+- *Refinement of the spot selection*: A 2D gaussian approximates the point spread function which describes the distribution 
+of the pixel fluorescence intensity in each spot. A 2D gaussian must thus fit well both GFP and RFP spots. We performed 
+a goodness of gaussian fit on each GFP and RFP spot pairs and retained only the spot pairs with an 
+<i>R<sup>2</sup></i> > 0.35
+
+- *MLE and outlier rejection*: 
+
 
 In this section we make a brief explanation of how to use Exocystosis_Image_Analysis.
-
-#### Command line arguments
-
-Within your working directory, first you need to modify some parameters of the program. Those, 
-are related to your working directory, and the processes to run (by default: all). 
-
-Then, you can run the following command:
-
-```bash
-    $ measure_pict_distances.py {DATA_FOLDER}
-```
-
-By default, if not specified in the options.py file, the program will run a test with 
-sla2 C-terminal within the sla2 folder.
-
-
-### Tu
-
-
 
