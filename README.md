@@ -1,12 +1,22 @@
 # PICT-MODELLER
 
+
+<!-- TOC depthFrom:1 depthTo:6 withLinks:1 updateOnSave:1 orderedList:0 -->
+- [What is it?](#what-is-it)
+- [How does it work?](#how-does-it-work)
+- [Instructions](#instructions)
+  - [Use Colab](#use-colab)
+  - [Run it locally](#run-it-locally)
+
+<!-- /TOC -->
+
 What is it?
 -----------
 
 **PICT-MODELLER** is a Python-based software that provide the tools to model the near-physiological 3D architecture of 
-protein assemblies. PICT-MODELLER the Python implementation of our previous work
+protein assemblies. This software is the Python implementation of our previous work
 <a href=https://www.sciencedirect.com/science/article/pii/S0092867417300521> (Picco A., et al, 2017)</a> where we combined 
-<a href=https://www.sciencedirect.com/science/article/pii/S0092867417300521> PICT/<a> (yeast engineering & live-cell imaging)
+<a href=https://www.sciencedirect.com/science/article/pii/S0092867417300521> PICT<a> (yeast engineering & live-cell imaging)
 and integrative modeling to reconstruct the molecular architecture of the exocyst complex in its cellular environment.
 
 How does it work?
@@ -24,8 +34,15 @@ distribution of fluorophore positions (determined from *in situ* data) with avai
  *in vitro*) to recapitulate the architecture of the protein complex in its close-to-native environment.
 
 
+Instructions
+-----------
+### Use Colab
 
-### Download 
+You can use <a href=https://colab.research.google.com/drive/1kSOnZdwRb4xuznyQIpRNWUBBFKms91M8?usp=sharing>PICT Colab</a>
+to run the image analysis and modeling scripts without the need of installation. 
+
+### Run it locally
+You will need a machine running Linux, 
 
 1) Download the git repo in your local computer and get into the folder, or run:
 
@@ -33,11 +50,8 @@ distribution of fluorophore positions (determined from *in situ* data) with avai
   $ git clone https://github.com/Altairch95/Exocystosis_Image_Analysis
   $ cd Exocystosis_Image_Analysis
  ```
-2) Downloading the weights for yeast cell segmenetation
 
-We need the pre-trained weights for the neural network of YeastSpotter, which are too large to share on GitHub. You can grab them from our webserver as a zip file (http://hershey.csb.utoronto.ca/weights.zip) or from Zenodo (https://zenodo.org/record/3598690).
-
-3) Create a conda environment with python3.7.7:
+2Create a conda environment with python3.7.7:
 
 ```bash
   $ conda create -n {ENV_NAME} python=3.7.7 anaconda
@@ -137,6 +151,4 @@ sla2 C-terminal within the sla2 folder.
 
 
 ### Output Example
-
-
 
