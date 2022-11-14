@@ -7,6 +7,7 @@
 - [Instructions](#instructions)
   - [Use Colab](#use-colab)
   - [Run it locally](#run-it-locally)
+- [Tutorial](tutorial)
 
 <!-- /TOC -->
 
@@ -42,35 +43,47 @@ You can use [PICT Colab](https://colab.research.google.com/drive/1kSOnZdwRb4xuzn
 to run the image analysis and modeling scripts without the need of installation. 
 
 ### Run it locally
-You will need a machine running Linux, 
+
+You will need a machine running Linux, it does not support other operating systems.
 
 1) Download the git repo in your local computer and get into the folder, or run:
 
 ```bash
-  $ git clone https://github.com/Altairch95/Exocystosis_Image_Analysis
-  $ cd Exocystosis_Image_Analysis
+  $ git clone https://github.com/Altairch95/PICT-MODELLER
+  $ cd PICT-MODELLER
  ```
+2) Download weights
 
-2Create a conda environment with python3.7.7:
+PICT-MODELLER utilizes the pre-trained weights for the neural network that is used for yeast cell segmentation in 
+[Yeast Spotter](http://yeastspotter.csb.utoronto.ca/). The weights are necessary to run the software, but are too large
+ to share on GitHub. You can download the zip file from this [Zenodo](https://zenodo.org/record/3598690) repository. 
+
+Once downloaded, simply unzip it and move it to the *scripts/* directory. You can also run the following command:
 
 ```bash
-  $ conda create -n {ENV_NAME} python=3.7.7 anaconda
+  $ unzip weights.zip
+  $ mv weights/ path/to/PICT-MODELLER/scripts/
  ```
 
-3) Install the requiments listed in *requirements.txt*:
+3) Create a conda environment:
+
+```bash
+  $ conda create -n {ENV_NAME} python=3.7 anaconda
+ ```
+
+4) Install the requirements listed in *requirements.txt*:
+5) 
 ```bash
   $ pip install -r requirements.txt
  ```
 
-
-
-At this pont, the directory *Exocystosis_Image_Analysis* should contain the files and directories described bellow:
+At this pont, the directory *PICT-MODELLER* should contain the files and directories described bellow:
 
 #### Package tree
 
 The package has the following structure:
 
-    Exocystosis_Image_Analysis/
+    PICT-MODELLER/
       README.md
       scripts/
           calculate_PICT_distances.py
@@ -85,40 +98,28 @@ The package has the following structure:
           segmentation_pp.py
           spot_detection_functions.py
           mrcnn/                      (YeastSpotter)
-          weights/                    (for Yeasr Spoter weights)  
+          weights/                    (for mrcnn yeast segmentation)  
               
-      sla2/
-          sla2_C/
-              input/
-                  pict_images/
-                  beads/
-         sla2_N_C/
-              input/
-                  pict_images/
-                  beads/
-          
+      test/
+          input/
+              pict_images/
+              beads/
 
-* README.md: the tutorial and information about our application.
-* scripts: a folder with the following scripts:
-  - measure_pict_distances.py: the command-line script to launch the program.
-  - custom.py: a module requiered by measure_pict_distances.py where are defined the classes of the program.
-  - calculate_PICT_distances.py: a module required by measure_pict_distances.py where are defined the functions of the program.
-  - options.py: file with parameters to modify by the user to run the program (see tutorial).
-  
-* sla2 (Test): a directory with two input datasets that serve as input to test the program.
-
------
 
 Tutorial
 --------
 
 ### Input Files
 
-This program needs an input of brightfield TIFF images (central quadrant, 16-bit) captured as stacks of two channels: 
+This program needs an input of bright-field TIFF images (central quadrant, 16-bit) captured as stacks of two channels: 
   - Channel 1: Red channel    (W1) --> observing RFP spots.
   - Channel 2: Green channel  (W2) --> observing GFP spots.
   
-From the input images, the program runs through different steps: **image preprocesing**, **Spot Detection** (Trackpy), **Spot selection** and **outlier rejection**.
+From the input images, the program runs through different steps: 
+- **image preprocesing**, 
+- **Spot Detection** (Trackpy), 
+- **Spot selection** 
+- **Outlier rejection**.
 
 * Input images are first preprocessed with a *background subtraction* and *median filter* algorithm to reduce the extracellular and citoplasmic noise of the images. 
 * Chromatic aberration correction using synthetic beads. Beads in W1 (red) are aligned to beads of W2 (green, reference).
