@@ -192,17 +192,52 @@ Tutorial
 Notes
 --------
 
-### Input Files
+#### Note 1: Input files (Beads and PICT images)
 
 This program needs an input of bright-field TIFF images (central quadrant, 16-bit) captured as stacks of two channels: 
+
   - Channel 1: Red channel    (W1) --> observing RFP spots.
-  - Channel 2: Green channel  (W2) --> observing GFP spots.
-  
+  - Channel 2: Green channel  (W2) --> observing GFP spots. 
+
+**Beads**: To calibrate this protocol, the imaging of [TetraSpeck](https://www.thermofisher.com/order/catalog/product/T7279) 
+in both the red and green channel is required. For each channel, the user should acquire images from  
+4 fields of view (FOV) with isolated beads (avoiding clusters) and minimizing void areas (each FOV should have 
+a homogeneity distribution of beads to cover all the possible coordinates. Finally, the 4 FOV for each channel 
+should be stacked (e.g, stack-1 contains frame_FOV_0, frame_FOV_1, frame_FOV_2, frame_FOV_3) and named as **W1** for the
+red channel, and **W2** for the green channel.
+
+**PICT images**: *PICT images* is the name used to reference the images gathered from the 
+[PICT experiment]((https://www.sciencedirect.com/science/article/pii/S0092867417300521)). Each *pict_image.tif* is a 
+stack of red/green channels. Diffraction-limited spots should be visualized when opening the image with ImageJ or any 
+other image processing software. 
+
+#### Note 2: Running the software
+
 From the input images, the program runs through different steps: 
-- **image pre-procesing**, 
-- **Spot Detection** (Trackpy), 
-- **Spot selection** 
-- **Outlier rejection**.
+
+##### 1) **Beads Registration**:
+    - Bead registration: isolated beads are detected for each channel. Agglomerations of beads, or beads shinning with
+   low intensity are excluded based on the 0-th moment /(M_{00}/) of brightness (excluding the beads with an /(M_{00}/)
+   falling on the 1st and 95th percentile).
+    - Bead transformation: selected beads are transformed (aligned) and the transformation matrix is saved. For the 
+   alignment, beads selected in W1 (red, mov) are aligned to the beads selected in W2 (green, reference).
+        > Explanation: because we are imaging the same beads on the red and green channel, the XY coordinates should not
+        change. However, because we are imaging at different wavelengths, each channel will refract the light differently
+      (the refractive index of the lens varies with wavelength). The inability of the lens to bring the green and red 
+       spots into a common focus results in a slightly different image size and focal point for each wavelength. This 
+       artifact is commonly known as chromatic aberration, and must be corrected.
+
+##### 2) **Image pre-procesing**:
+    - Background subtraction: Raw PICT images are corrected for the extracellular noise using the Rolling-Ball 
+   algorithm. The size for estimating the rolling ball kernel is based on the maximum separation between two yeast 
+   cells (a radius around 70 px.)
+    - Median filter: correction for the intracellular noise is also applied with a median filter of 10 px.
+   
+##### 3) **Spot Detection**: 
+    - 
+4) **Spot selection** 
+5) **Outlier rejection**
+
 
 * Input images are first preprocessed with a *background subtraction* and *median filter* algorithm to reduce the extracellular and citoplasmic noise of the images. 
 * Chromatic aberration correction using synthetic beads. Beads in W1 (red) are aligned to beads of W2 (green, reference).
