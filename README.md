@@ -270,7 +270,7 @@ distribution described in [Churchman et al. 2006](https://www.sciencedirect.com/
 
 $$  
 \begin{align}
-    p (d) = \left ( \cfrac{d}{2 \pi \sigma^2} \right ) \textbf{exp} -\left ( \cfrac{\mu^2 + d^2}{2 \sigma^2} \right ) 
+    p (d) = \left ( \cfrac{d}{2 \pi \sigma^2} \right ) \textup{exp} -\left ( \cfrac{\mu^2 + d^2}{2 \sigma^2} \right ) 
     \ I_0 \left ( \cfrac{d \ \cdot\mu }{\sigma^2} \right)
 \end{align}
 $$
@@ -284,15 +284,12 @@ rejected and a new estimate of µ and σ is computed. The process is iterated un
 the largest distances (which are those defining the tail of the distribution, where outliers, if present, are more 
 problematic), has been sampled for rejection (we do not expect to reject as many data points, but 1/3 seemed a safe 
 parameter to ensure that we had a large sampling of the dataset). Two subsequent rejections <i>i</i> and <i>i</i> + 1 
-will give two estimates of µ. Their difference, δµ<sub>i</sub> = µ<sub>i + 1</sub> - µ<sub>i</sub>, will decrease when 
+will give two estimates of µ. Their difference, δµ<sub>i</sub> = µ<sub>i + 1</sub> - µ<sub>i</sub> will decrease when 
 most outliers are rejected and the score:
 
-$$  
-\begin{align}
+$$
     p_{\delta \mu} = \cfrac{\cfrac{1}{\delta \mu}}{\sum \delta \mu} \ 
     \textup{log} \left ( \cfrac{\cfrac{1}{\delta \mu}}{\sum \delta \mu} \right )
-
-\end{align}
 $$
 
 will thus be maximal.
@@ -300,19 +297,11 @@ will thus be maximal.
 The µ, σ and the ensemble of data points that are retained after all these iterations are those that maximize a scoring 
 function defined as 
 
-$$  
-\begin{align}
-    S (p_{\delta \mu}, p_{\delta \sigma}) = - p_{\mu} \cdot p_{\delta \mu} -  p_{\sigma} \cdot p_{\delta \sigma}    
-
-\end{align}
+$$
+    S (p_{\delta \mu}, p_{\delta \sigma}) = - p_{\mu} \cdot p_{\delta \mu} -  p_{\sigma} \cdot p_{\delta \sigma}
 $$
 
 where <i>S(p<sub>δµ</sub>)</i>, <i>S(p<sub>δσ</sub>)</i> will be maimal when both scores <i>p<sub>δµ</sub></i> and 
 <i>p<sub>δσ</sub></i> will be similarly maximized.
-
-
-
-
-
 
 
