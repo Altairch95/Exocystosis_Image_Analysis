@@ -8,6 +8,7 @@
   - [Use Colab](#use-colab)
   - [Run it locally](#run-it-locally)
 - [Tutorial](#tutorial)
+- [Notes](#notes)
 
 <!-- /TOC -->
 
@@ -182,6 +183,12 @@ Run the software:
   $ python3 measure_pict_distances.py -d my_dir 
  ```
 
+You may grab a coffee while waiting for the results :)
+
+Tutorial
+--------
+
+
 Notes
 --------
 
@@ -224,7 +231,7 @@ By default, if not specified in the options.py file, the program will run a test
 sla2 C-terminal within the sla2 folder.
 
 
-### Output Example
+### Tu
 
 
 
