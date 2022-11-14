@@ -69,6 +69,7 @@ Once downloaded, simply unzip it and move it to the *scripts/* directory. You ca
 
 ```bash
   $ conda create -n {ENV_NAME} python=3.7 anaconda
+  $ conda activate {ENV_NAME}
  ```
 
 4) Install the requirements listed in *requirements.txt*:
@@ -106,7 +107,82 @@ The package has the following structure:
               beads/
 
 
-Tutorial
+Image Analysis Tutorial
+-----------------------
+
+Image analysis can be divided into two steps. First, we processed images to measure the centroid positions of the 
+GFP and RFP tags. Then, we analyzed the distribution of these centroid positions to estimate the true separation between
+the GFP and RFP fluorophores using Single-molecule High-REsolution Colocalization (SHREC)
+([Churchman et al. 2005](https://www.pnas.org/doi/abs/10.1073/pnas.0409487102), 
+[Churchman et al. 2006](https://www.sciencedirect.com/science/article/pii/S0006349506722457)).
+
+#### Command line arguments
+
+```bash
+  $ python3 measure_pict_distances.py -h
+```
+        Computing the distance distribution between fluorophores tagging the protein
+        complex (e.g, exocyst) with a precision up to 5 nm.
+        
+        optional arguments:
+          -h, --help            show this help message and exit
+          -d DATASET, --dataset DATASET
+                                Name of the dataset where the input/ directory is
+                                located
+          --test                Runs the test dataset
+          -o OPTION, --option OPTION
+                                Option to process: 'all' (whole workflow), 'beads'
+                                (bead registration), 'pp' (preprocessing), 'spt' (spot
+                                detection and linking), 'warping' (transform XY spot
+                                coordinates using the beads warping matrix), 'segment'
+                                (yeast segmentation), 'gaussian' (gaussian fitting),
+                                'kde' (2D Kernel Density Estimate), 'outlier (outlier
+                                rejection using the MLE)'. Default: 'main'
+
+
+1) Run a test to check that everything is installed and running as expected:
+
+```bash
+  $ conda activate {ENV_NAME}  # Make sure to activate your conda environment
+  $ python3 measure_pict_distances.py --test 
+ ```
+
+The test is composed by 5 raw images located in the *input/pict_images/* folder. By running the test, 
+you should visualize on the terminal all the log of the image processing and image analysis steps. You 
+can also get track about the program steps in the *log.txt* file.
+
+You can check that the results are generated and saved in the *output/* folder with different sub-folders:
+<ul>
+    <li>images: contains the processed images.</li>
+    <li>spots: contains the data from spot detection on your PICT images.</li>
+    <li>segmentation: contains the segmented images, masks, and contour images.</li>
+    <li>results: contains the resulting files from each processing/analysis step</li>
+    <li>figures: contains HTML and png files to get track of the detected and selected spots for each 
+    image, on each step, as well as the distance distribution for each step. It also contains PDF file with
+    the final distance distribution and params estimates (mu and sigma) </li>
+</ul>
+
+2) Create a directory with the name of your system and the same structure as the *test/*: add to it the containing-beads
+   directory (*beads/*) and the containing-PICT-images directory (*pict_images/*).
+
+```bash
+  $ mkdir my_dir_name
+  $ cd my_dir_name
+  # Create beads/ and pict_images/ if not there
+  $ mkdir beads/
+  $ mkdir pict_images/
+  # Move the beads W1.tif and W2.tif to beads/ and your PICT images to pict_images/
+  $ mv path/to/beads/*.tif path/to/my_dir_name/beads/
+  $ mv path/to/pict-images/*.tif path/to/my_dir_name/pict_images/
+ ```
+
+Run the software:
+
+```bash
+  $ python3 measure_pict_distances.py -d my_dir 
+ ```
+
+Notes
 --------
 
 ### Input Files
@@ -116,7 +192,7 @@ This program needs an input of bright-field TIFF images (central quadrant, 16-bi
   - Channel 2: Green channel  (W2) --> observing GFP spots.
   
 From the input images, the program runs through different steps: 
-- **image preprocesing**, 
+- **image pre-procesing**, 
 - **Spot Detection** (Trackpy), 
 - **Spot selection** 
 - **Outlier rejection**.
