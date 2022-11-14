@@ -265,12 +265,52 @@ of the pixel fluorescence intensity in each spot. A 2D gaussian must thus fit we
 a goodness of gaussian fit on each GFP and RFP spot pairs and retained only the spot pairs with an 
 <i>R<sup>2</sup></i> > 0.35
 
-- *MLE and outlier rejection*: The distribution of distance measurements should approximate this skewed distribution
+- *MLE and outlier rejection*: The distribution of distance measurements should approximate a known non-Gaussian 
+distribution described in [Churchman et al. 2006](https://www.sciencedirect.com/science/article/pii/S0006349506722457)):
 
-$$ p(d) = \( \frac{d}{2 \pi \sigma²} \) $$
+$$  
+\begin{align}
+    \tag{eq. 1}
+    p (d) = \left ( \cfrac{d}{2 \pi \sigma^2} \right ) \textbf{exp} -\left ( \cfrac{\mu^2 + d^2}{2 \sigma^2} \right ) 
+    \ I_0 \left ( \cfrac{d \ \cdot\mu }{\sigma^2} \right)
+\end{align}
+$$
+
+where <i>I<sub>0</sub></i> is the Bessel function of order 0. The true separation between the fluorophores can thus be 
+computed with a MLE. Because of the skewed nature of the distribution, outliers, especially if in the tail of the 
+distribution, can fail the MLE. To reject those, we proceeded with a bootstrap method. Each datapoint is rejected, 
+one at the time, and for each rejection we compute the log-likelihood given an initial estimate of µ and σ. The datapoint 
+that is less likely to belong to the dataset is the one whose rejection gives the worst log-likelihood. This datapoint is 
+rejected and a new estimate of µ and σ is computed. The process is iterated until one third of the dataset, starting from 
+the largest distances (which are those defining the tail of the distribution, where outliers, if present, are more 
+problematic), has been sampled for rejection (we do not expect to reject as many data points, but 1/3 seemed a safe 
+parameter to ensure that we had a large sampling of the dataset). Two subsequent rejections <i>i</i> and <i>i</i> + 1 
+will give two estimates of µ. Their difference, δµ<sub>i</sub> = µ<sub>i + 1</sub> - µ<sub>i</sub>, will decrease when 
+most outliers are rejected and the score:
+
+$$  
+\begin{align}
+    \tag{eq. 2}
+    p_{\delta \mu} = \cfrac{\cfrac{1}{\delta \mu}}{\sum \delta \mu} \ 
+    \textup{log} \left ( \cfrac{\cfrac{1}{\delta \mu}}{\sum \delta \mu} \right )
 
 
+\end{align}
+$$
 
+will thus be maximal.
 
+The µ, σ and the ensemble of data points that are retained after all these iterations are those that maximize a scoring 
+function defined as 
 
+$$  
+\begin{align}
+    \tag{eq. 3}
+    S (p_{\delta \mu}, p_{\delta \sigma}) = - p_{\mu} \cdot p_{\delta \mu} -  p_{\sigma} \cdot p_{\delta \sigma}    
+
+\end{align}
+$$
+
+where <i>S(p<sub>δµ</sub>)</i>, <i>S(p<sub>δσ</sub>)</i> will be maimal when both scores <i>p<sub>δµ</sub></i> and 
+<i>p<sub>δσ</sub></i> will be similarly maximized.
 
