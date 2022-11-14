@@ -1,11 +1,28 @@
 # PICT-MODELLER
-----------
-## Sub-pixel distance estimation between fluorohores using live-cell imaging.
 
 What is it?
 -----------
 
-**PICT-MODELLER** is a set of Python scripts that allow for the estimation of distances between fluorophores flagging the termini of protein complexes of interest. As input, it uses  
+**PICT-MODELLER** is a Python-based software that provide the tools to model the near-physiological 3D architecture of 
+protein assemblies. PICT-MODELLER the Python implementation of our previous work
+<a href=https://www.sciencedirect.com/science/article/pii/S0092867417300521> (Picco A., et al, 2017)</a> where we combined 
+<a href=https://www.sciencedirect.com/science/article/pii/S0092867417300521> PICT/<a> (yeast engineering & live-cell imaging)
+and integrative modeling to reconstruct the molecular architecture of the exocyst complex in its cellular environment.
+
+How does it work?
+-----------
+
+PICT-MODELLER utilizes bioimage analysis tools that allows for the **processing** (*Background subtraction*, *chromatic
+aberration correction*, and *spot detection*) and **analysis** of live-cell imaging (fluorescence microscopy) data to 
+estimate the pair-wise distance between a fluorophore flagging the terminus of a protein complex (prey-GFP) and a static
+intracellular anchor site (anchor-RFP). From a dataset of 20 - 30 images, PICT-MODELLER estimates the μ and σ parameters 
+of the final distance distribution with a precision below 5 nm.
+
+PICT-MODELLER can use the set of pairwise distances to determine the relative fluorophore positions by trilateration.
+The Integrative Modeling Platform <a href=https://integrativemodeling.org/>(IMP)</a> can be used to integrate the 
+distribution of fluorophore positions (determined from *in situ* data) with available structural information (obtained
+ *in vitro*) to recapitulate the architecture of the protein complex in its close-to-native environment.
+
 
 
 ### Download 
