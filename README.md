@@ -11,6 +11,10 @@
 - [Notes](#notes)
   - [Note 1: Input files](#note-1-input-files-beads-and-pict-images)
   - [Note 2: Running the Software](#note-2-running-the-software)
+    - [Bead registration](#1-bead-registration)
+    - [Pre-Processing](#2-image-pre-procesing)
+    - [Spot Detection](#3-spot-detection)
+    - [Spot Selection](#4-spot-selection)
 
 <!-- /TOC -->
 
@@ -216,7 +220,7 @@ other image processing software.
 
 From the input images, the program runs through different steps: 
 
-#### 1) **Beads Registration**:
+#### 1) **Bead Registration**:
 
 - *Bead registration*: isolated beads are detected for each channel. Agglomerations of beads, or beads shinning with
    low intensity are excluded based on the 0-th moment <i>M<sub>00</sub></i> of brightness (mass) (excluding the beads 
