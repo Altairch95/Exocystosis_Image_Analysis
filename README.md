@@ -216,10 +216,10 @@ other image processing software.
 From the input images, the program runs through different steps: 
 
 ##### 1) **Beads Registration**:
-    - Bead registration: isolated beads are detected for each channel. Agglomerations of beads, or beads shinning with
-   low intensity are excluded based on the 0-th moment /(M_{00}/) of brightness (excluding the beads with an /(M_{00}/)
+- Bead registration: isolated beads are detected for each channel. Agglomerations of beads, or beads shinning with
+   low intensity are excluded based on the 0-th moment $$M_{00}$$ of brightness (excluding the beads with an /(M_{00}/)
    falling on the 1st and 95th percentile).
-    - Bead transformation: selected beads are transformed (aligned) and the transformation matrix is saved. For the 
+- Bead transformation: selected beads are transformed (aligned) and the transformation matrix is saved. For the 
    alignment, beads selected in W1 (red, mov) are aligned to the beads selected in W2 (green, reference).
         > Explanation: because we are imaging the same beads on the red and green channel, the XY coordinates should not
         change. However, because we are imaging at different wavelengths, each channel will refract the light differently
@@ -228,10 +228,10 @@ From the input images, the program runs through different steps:
        artifact is commonly known as chromatic aberration, and must be corrected.
 
 ##### 2) **Image pre-procesing**:
-    - Background subtraction: Raw PICT images are corrected for the extracellular noise using the Rolling-Ball 
+- Background subtraction: Raw PICT images are corrected for the extracellular noise using the Rolling-Ball 
    algorithm. The size for estimating the rolling ball kernel is based on the maximum separation between two yeast 
    cells (a radius around 70 px.)
-    - Median filter: correction for the intracellular noise is also applied with a median filter of 10 px.
+- Median filter: correction for the intracellular noise is also applied with a median filter of 10 px.
    
 ##### 3) **Spot Detection**: 
     - 
