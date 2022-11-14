@@ -7,7 +7,7 @@
 - [Instructions](#instructions)
   - [Use Colab](#use-colab)
   - [Run it locally](#run-it-locally)
-- [Tutorial](tutorial)
+- [Tutorial](#tutorial)
 
 <!-- /TOC -->
 
@@ -15,9 +15,9 @@ What is it?
 -----------
 
 **PICT-MODELLER** is a Python-based software that provide the tools to model the near-physiological 3D architecture of 
-protein assemblies. This software is the Python implementation of our previous work
-<a href=https://www.sciencedirect.com/science/article/pii/S0092867417300521> (Picco A., et al, 2017)</a> where we combined 
-<a href=https://www.sciencedirect.com/science/article/pii/S0092867417300521> PICT<a> (yeast engineering & live-cell imaging)
+protein assemblies. This software is the Python implementation of our previous work 
+[Picco A., et al, 2017](https://www.sciencedirect.com/science/article/pii/S0092867417300521) where we combined 
+[PICT](https://www.sciencedirect.com/science/article/pii/S0092867417300521) (yeast engineering & live-cell imaging)
 and integrative modeling to reconstruct the molecular architecture of the exocyst complex in its cellular environment.
 
 How does it work?
@@ -130,9 +130,6 @@ From the input images, the program runs through different steps:
     - Select spots in W1 and W2 based on the goodness of the gaussian fit, after fiting spot intensitites to a gaussian distribution.
     - Select spots in W1 and W2 based on a density probability estimation (KDE), assuming that here we discard all spots that are not "in focus".
     - Outlier rejection: fitting the final distribution of distances to a non-gaussian distribution described in [Churchman et al.,2006](https://duckduckgo.com) .
-
-
-### Tutorial
 
 In this section we make a brief explanation of how to use Exocystosis_Image_Analysis.
 
