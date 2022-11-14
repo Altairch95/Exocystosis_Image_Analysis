@@ -270,7 +270,6 @@ distribution described in [Churchman et al. 2006](https://www.sciencedirect.com/
 
 $$  
 \begin{align}
-    \tag{eq. 1}
     p (d) = \left ( \cfrac{d}{2 \pi \sigma^2} \right ) \textbf{exp} -\left ( \cfrac{\mu^2 + d^2}{2 \sigma^2} \right ) 
     \ I_0 \left ( \cfrac{d \ \cdot\mu }{\sigma^2} \right)
 \end{align}
@@ -290,10 +289,8 @@ most outliers are rejected and the score:
 
 $$  
 \begin{align}
-    \tag{eq. 2}
     p_{\delta \mu} = \cfrac{\cfrac{1}{\delta \mu}}{\sum \delta \mu} \ 
     \textup{log} \left ( \cfrac{\cfrac{1}{\delta \mu}}{\sum \delta \mu} \right )
-
 
 \end{align}
 $$
@@ -305,7 +302,6 @@ function defined as
 
 $$  
 \begin{align}
-    \tag{eq. 3}
     S (p_{\delta \mu}, p_{\delta \sigma}) = - p_{\mu} \cdot p_{\delta \mu} -  p_{\sigma} \cdot p_{\delta \sigma}    
 
 \end{align}
@@ -313,4 +309,10 @@ $$
 
 where <i>S(p<sub>δµ</sub>)</i>, <i>S(p<sub>δσ</sub>)</i> will be maimal when both scores <i>p<sub>δµ</sub></i> and 
 <i>p<sub>δσ</sub></i> will be similarly maximized.
+
+
+
+
+
+
 
