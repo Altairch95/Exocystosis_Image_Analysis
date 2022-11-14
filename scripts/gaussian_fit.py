@@ -15,13 +15,35 @@ import pandas as pd
 import seaborn as sns
 import matplotlib.pyplot as plt
 import plotly.express as px
-from skimage.io import imread, imsave
+from skimage.io import imread
 from lmfit import Parameters, minimize
+import trackpy as tp
 
 
 # ======================
 # GAUSSIAN FUNCTIONS
 # ======================
+
+
+def read_csv_2(file):
+    """
+    Function to read multiple csv (input data)
+    """
+    channel = file.split("/")[-1].split(".")[0].split("_")[3]
+    img = file.split("/")[-1].split(".")[0].split("_")[2]
+    df = pd.read_csv(file, sep="\t")  # sep="\t"
+    if len(df) != 0:
+        df.loc[:, "channel"] = channel
+        df.loc[:, "img"] = img
+        return df
+
+
+def calculate_distances(df_1, df_2):
+    """
+    Calculate distances (in nm) between coloc. spots
+    """
+    return np.sqrt(
+        (df_1.x.to_numpy() - df_2.x.to_numpy()) ** 2 + (df_1.y.to_numpy() - df_2.y.to_numpy()) ** 2) * 64.5
 
 
 def gaussian2D(x, y, cen_x, cen_y, sig_x, sig_y, offset):
@@ -155,7 +177,6 @@ def save_html_gaussian(path_to_save, channel_image, sub_df, img_num, channel_nam
                                                                                              channel_name, foo_note))
     fig_label_cont.update_layout(coloraxis_showscale=False)  # to hide color bar
 
-
     # Plot spots with custom hover information
     fig_label_cont.add_scatter(x=selected["y"], y=selected["x"],
                                mode="markers",
@@ -184,7 +205,7 @@ def save_html_gaussian(path_to_save, channel_image, sub_df, img_num, channel_nam
     fig_label_cont.write_html(path_to_save + "gaussian_fit/" + "image_{}_{}.html".format(img_num, channel_name))
 
 
-def main_gaussian():
+def main_gaussian(results_dir, images_dir, figures_dir):
     """
     2) Main method to run gaussian fitting on spots sorted from
     yeast segmentation method. Selection is based on R^2 (goddness
@@ -196,38 +217,37 @@ def main_gaussian():
     logging.info("\n\n####################################\n"
                  "Initializing Gaussian Fitting Selection \n"
                  "########################################\n\n")
+    # R^2 cutoff to reject spots under this cutoff (reject surely bad spots)
+    r2_cutoff = 0.35  # quality of spots above this r2 value
+    # Load data from Segmentation Filter
+    data_seg_W1 = pd.concat(map(read_csv_2, sorted(glob.glob(f"{results_dir}segmentation/detected_seg_*W1.csv"))),
+                      ignore_index=True)
+    data_seg_W2 = pd.concat(map(read_csv_2, sorted(glob.glob(f"{results_dir}segmentation/detected_seg_*W2.csv"))),
+                      ignore_index=True)
     percent_sel_total_W1 = list()
     percent_sel_total_W2 = list()
     percent_sel_total = list()
     total_data = 0
     total_selected = 0
-    r2_cutoff = 0.75  # quality of spots above this r2 value
-    # sigma_r_lower = 0.9  # lw sigma ratio  (optional, not optimized)
-    # sigma_r_upper = 1.10  # lw sigma ratio (optional, not optimized)
-    if os.path.exists(opt.results_dir + "segmentation/") and \
-            len(os.listdir(opt.results_dir + "segmentation/")) != 0:
-        for img_file in glob.glob(opt.images_dir + "imageMD*"):
-            start = time.time()
-            image_number = img_file.split("/")[-1].split("_")[-1].split(".")[0]
-            print("Processing image {} ...\n".format(image_number))
-            # Read image and separate frames
-            image = imread(opt.images_dir + "imageMD_{}.tif".format(image_number))
-            W1 = image[0]
-            W2 = image[1]
-
-            # Load spot coordinates for W1 and W2
-            spots_df_W1 = pd.read_csv(opt.results_dir + "segmentation/" +
-                                      "detected_seg_{}_W1.csv".format(image_number))  # Spot coordinates W1
-            spots_df_W1.loc[:, "img"] = image_number
-            spots_df_W2 = pd.read_csv(opt.results_dir + "segmentation/" +
-                                      "detected_seg_{}_W2.csv".format(image_number))  # Spot coordinates W2
-            spots_df_W2.loc[:, "img"] = image_number
+    for img_file in glob.glob(images_dir + "image_*.tif"):
+        start = time.time()  # Keep track of time
+        image_number = img_file.split("/")[-1].split("_")[-1].split(".")[0]
+        print("Processing image {} ...\n".format(image_number))
+        # Read image and separate frames
+        image = imread(images_dir + "image_{}.tif".format(image_number))
+        W1 = image[0]
+        W2 = image[1]
+        # Load spot coordinates for W1 and W2 for the given image
+        spots_df_W1 = data_seg_W1[data_seg_W1.img == image_number]
+        spots_df_W2 = data_seg_W2[data_seg_W2.img == image_number]
+        # Make sure that the number of spots in the image is not 0
+        if len(spots_df_W1) != 0 and len(spots_df_W1) != 1:
             total_data += spots_df_W1.shape[0]
 
             # Slice dataframe with columns of interest (this is just for debugging)
             sub_df_W1 = spots_df_W1.loc[:, ["x", "y", "ID"]]
             sub_df_W2 = spots_df_W2.loc[:, ["x", "y", "ID"]]
-
+            # Clean Spot Boundaries
             spots_df_W1, sub_df_W1 = clean_spot_boundaries(spots_df_W1, sub_df_W1, W1, radius=5)
             spots_df_W2, sub_df_W2 = clean_spot_boundaries(spots_df_W2, sub_df_W2, W2, radius=5)
 
@@ -271,26 +291,26 @@ def main_gaussian():
             total_selected += num_selected
 
             # Save figure with selected and non-selected spots based on goodness of the gaussian fit
-            save_html_gaussian(opt.figures_dir, W1, sub_df_W1, image_number, "W1")
-            save_html_gaussian(opt.figures_dir, W2, sub_df_W2, image_number, "W2")
+            save_html_gaussian(figures_dir, W1, sub_df_W1, image_number, "W1")
+            save_html_gaussian(figures_dir, W2, sub_df_W2, image_number, "W2")
 
             # Save df as csv: gaussian.csv
-            if not os.path.exists(opt.results_dir):
-                os.mkdir(opt.results_dir)
-            if not os.path.exists(opt.results_dir + "gaussian_fit/"):
-                os.mkdir(opt.results_dir + "gaussian_fit/")
-            sub_df_W1.to_csv(opt.results_dir + "gaussian_fit/" +
+            if not os.path.exists(results_dir):
+                os.mkdir(results_dir)
+            if not os.path.exists(results_dir + "gaussian_fit/"):
+                os.mkdir(results_dir + "gaussian_fit/")
+            sub_df_W1.to_csv(results_dir + "gaussian_fit/" +
                              "all_gauss_{}_{}.csv".format(image_number, "W1"),
-                             sep=",", encoding="utf-8", header=True, index=False)
-            sub_df_W2.to_csv(opt.results_dir + "gaussian_fit/" +
+                             sep="\t", encoding="utf-8", header=True, index=False)
+            sub_df_W2.to_csv(results_dir + "gaussian_fit/" +
                              "all_gauss_{}_{}.csv".format(image_number, "W2"),
-                             sep=",", encoding="utf-8", header=True, index=False)
-            selection_df_paired_W1.to_csv(opt.results_dir + "gaussian_fit/" +
+                             sep="\t", encoding="utf-8", header=True, index=False)
+            selection_df_paired_W1.to_csv(results_dir + "gaussian_fit/" +
                                           "detected_gauss_{}_{}.csv".format(image_number, "W1"),
-                                          sep=",", encoding="utf-8", header=True, index=False)
-            selection_df_paired_W2.to_csv(opt.results_dir + "gaussian_fit/" +
+                                          sep="\t", encoding="utf-8", header=True, index=False)
+            selection_df_paired_W2.to_csv(results_dir + "gaussian_fit/" +
                                           "detected_gauss_{}_{}.csv".format(image_number, "W2"),
-                                          sep=",", encoding="utf-8", header=True, index=False)
+                                          sep="\t", encoding="utf-8", header=True, index=False)
 
             # Append percentages to list to write in report (log.txt)
             percent_sel_total_W1.append(percent_sel_W1)
@@ -298,37 +318,88 @@ def main_gaussian():
             percent_sel_total.append(percent_sel)
             total_time = time.time() - start
             print("Image {} processed in {} s\n".format(image_number, round(total_time, 3)))
+        else:
+            print(f"\t--> 0 spots found in image {image_number}!\n")
+            logging.info(f"\t--> 0 spots found in image {image_number}!\n")
 
-        logging.info("\n\nTotal Percent W1 --> {} %\n"
-                     "Total Percent W2 --> {} %\n\n"
-                     "Total Paired Percent --> {} % \n".format(sum(percent_sel_total_W1) / len(percent_sel_total_W1),
-                                                               sum(percent_sel_total_W2) / len(percent_sel_total_W2),
-                                                               sum(percent_sel_total) / len(percent_sel_total)))
-        #####################################
-        # PLOT SELECTED SPOTS AFTER GAUSSIAN
-        #####################################
-        # Load data ensuring that W1 & W2 are paired
-        df_W1 = pd.concat(map(pd.read_csv, sorted(glob.glob(opt.results_dir + "gaussian_fit/all*W1*"))),
-                          ignore_index=True)
-        df_W2 = pd.concat(map(pd.read_csv, sorted(glob.glob(opt.results_dir + "gaussian_fit/all*W2*"))),
-                          ignore_index=True)
-        # Combine W1&W2 data into a df and label selected
-        df_data = pd.concat([df_W1.r2_gaussian.rename("r2_W1"), df_W2.r2_gaussian.rename("r2_W2")], axis=1)
-        df_data.loc[:, 'selected'] = np.where((df_W1["r2_gaussian"] >= r2_cutoff) & (df_W2["r2_gaussian"] >= r2_cutoff),
-                                              "sel", "non-sel")
-        # Plot values in the R^2 space
-        fig, ax = plt.subplots(constrained_layout=True, figsize=(8, 8))
-        sns.scatterplot(data=df_data, x="r2_W1", y="r2_W2", hue="selected", palette=["red", "black"], alpha=0.6,
-                        s=50, zorder=10, ax=ax)
-        ax.set_title("Goodness of the Gaussian Fit", fontweight="bold", size=20)
-        ax.set_ylabel("$W2 \ R^{2}$", fontsize=20)
-        ax.set_xlabel("$W1 \ R^{2}$", fontsize=20)
-        ax.set(xlim=(0, 1))
-        ax.set(ylim=(0, 1))
+    # WARNING!
+    if len(percent_sel_total_W1) == 0 or len(percent_sel_total_W1) == 0 or len(percent_sel_total_W1) == 0:
+        # WARNING: if no spots selected, we cannot continue!
+        sys.stderr.write('PICT-WARNING: 0 spots found in datasets or very few. Probably due to a short dataset'
+              'or poor quality images. \n\t\tWe recommend a minimum number of input images == 20.\n'
+              '\t\tPlease, review your input image dataset and quality and run it again.\n\n\tGood luck! :)\n\n')
+        sys.exit(1)
 
-        fig.savefig(opt.figures_dir + "gaussian.png", dpi=150)
+    print("\n\nTotal Gauss-filtered W1 --> {} %\n"
+          "Total Gauss-filtered W2 --> {} %\n\n"
+          "Total Gauss-filtered --> {} % \n".format(sum(percent_sel_total_W1) / len(percent_sel_total_W1),
+                                                    sum(percent_sel_total_W2) / len(percent_sel_total_W2),
+                                                    sum(percent_sel_total) / len(percent_sel_total)))
 
-        return total_data, total_selected
+    logging.info("\n\nTotal Gauss-filtered W1 --> {} %\n"
+                 "Total Gauss-filtered W2 --> {} %\n\n"
+                 "Total Gauss-filtered --> {} % \n".format(sum(percent_sel_total_W1) / len(percent_sel_total_W1),
+                                                           sum(percent_sel_total_W2) / len(percent_sel_total_W2),
+                                                           sum(percent_sel_total) / len(percent_sel_total)))
+    #####################################
+    # PLOT SELECTED SPOTS AFTER GAUSSIAN
+    #####################################
+    print("\nPlotting Gaussian selection....\n")
+    # Load data ensuring that W1 & W2 are paired
+    df_W1 = pd.concat(map(read_csv_2, sorted(glob.glob(results_dir + "gaussian_fit/all*W1*"))),
+                      ignore_index=True)
+    df_W2 = pd.concat(map(read_csv_2, sorted(glob.glob(results_dir + "gaussian_fit/all*W2*"))),
+                      ignore_index=True)
+    # Combine W1&W2 data into a df and label selected
+    df_data = pd.concat([df_W1.r2_gaussian.rename("r2_W1"), df_W2.r2_gaussian.rename("r2_W2")], axis=1)
+    df_data.loc[:, 'selected'] = np.where((df_W1["r2_gaussian"] >= r2_cutoff) & (df_W2["r2_gaussian"] >= r2_cutoff),
+                                          "sel", "non-sel")
+    df_data.loc[:, 'channel'] = np.where((df_W1["channel"] == "W1") & (df_W2["channel"] == "W2"),
+                                         "W1", "W2")
+    # Plot values in the R^2 space
+    fig, ax = plt.subplots(constrained_layout=True, figsize=(8, 8))
+    hue_order = ['sel', 'non-sel']
+    sns.scatterplot(data=df_data, x="r2_W1", y="r2_W2", hue="selected", palette=["red", "black"], alpha=0.6,
+                    s=50, zorder=10, ax=ax, hue_order=hue_order)
+    ax.set_title("Goodness of the Gaussian Fit", fontweight="bold", size=20)
+    ax.set_ylabel("$W2 \ R^{2}$", fontsize=20)
+    ax.set_xlabel("$W1 \ R^{2}$", fontsize=20)
+    ax.set(xlim=(0, 1))
+    ax.set(ylim=(0, 1))
+
+    fig.savefig(figures_dir + "gaussian.png", dpi=150)
+
+    # MEASURE DISTANCE DISTRIBUTION AFTER GAUSSIAN
+    initial_distances = np.loadtxt(results_dir + "distances_after_warping.csv")
+    df_W1 = pd.concat(map(read_csv_2, sorted(glob.glob(results_dir + "gaussian_fit/detected_gauss*W1*"))),
+                      ignore_index=True)
+    df_W2 = pd.concat(map(read_csv_2, sorted(glob.glob(results_dir + "gaussian_fit/detected_gauss*W2*"))),
+                      ignore_index=True)
+    distances_gauss = calculate_distances(df_W1,
+                                          df_W2)
+    np.savetxt(results_dir + "gaussian_fit/gauss_distances.csv", distances_gauss, delimiter=",")
+    # PLOT NEW DISTANCE DISTRIBUTION
+    fig, ax = plt.subplots(figsize=(25, 15))
+    sns.set(font_scale=3)
+    ax.set_title("Distances after GAUSSIAN selection\n\n"
+                 "mean detection = {} nm; stdev detection = {} nm; n = {}\n"
+                 "mean gaussian = {} nm; stdev gaussian = {} nm; "
+                 "n = {} \n".format(np.around(np.mean(initial_distances), 2),
+                                    np.around(np.std(initial_distances), 2),
+                                    len(initial_distances),
+                                    np.around(np.mean(distances_gauss), 2),
+                                    np.around(np.std(distances_gauss), 2),
+                                    len(distances_gauss)),
+                 fontweight="bold", size=25)
+    sns.histplot(data=initial_distances, kde=True, color="sandybrown", ax=ax, fill=True)
+    sns.histplot(data=distances_gauss, kde=True, ax=ax, color="cornflowerblue", fill=True)
+    ax.set_xlabel("$Distances \ (nm) $", fontsize=45, labelpad=30)
+    ax.set_ylabel("$Count $", fontsize=45, labelpad=30)
+    ax.axvline(x=np.mean(initial_distances), color='sandybrown', ls='--', lw=2.5, alpha=0.8)
+    ax.axvline(x=np.mean(distances_gauss), color='cornflowerblue', ls='--', lw=2.5, alpha=0.8)
+    plt.savefig(figures_dir + "gaussian_fit/" + "distances_after_gauss.png")
+
+    return total_data, total_selected
 
 
 if __name__ == "__main__":

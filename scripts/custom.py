@@ -4,12 +4,9 @@
 """
 Python file defining classes for custom Image objects
 """
-import glob
 import os.path
 import sys
 import csv
-import options as opt
-
 import numpy as np
 import pandas as pd
 from skimage import filters
@@ -87,7 +84,7 @@ class BioImage:
         """Get raw image array"""
         return io.imread(self.image_path)
 
-    def subtract_background(self, path_to_save=opt.images_dir, radius=opt.rolling_ball_radius, kernel=None):
+    def subtract_background(self, path_to_save, radius, kernel=None):
         """
         Method to perform background subtraction
         using rolling ball radius
@@ -122,7 +119,7 @@ class BioImage:
         print("\t{} saved in {}\n".format(self.name, path_to_save))
         return self
 
-    def median_filter(self, path_to_save=opt.images_dir, median_radius=opt.medial_filter_radius):
+    def median_filter(self, path_to_save, median_radius):
         """
         Method to perform median filter from an image,
         computing the image corrected without cytoplasmatic
@@ -158,7 +155,7 @@ class BioImage:
         sys.stdout.write("{} saved in {}\n".format(self.bgn_median_name, path_to_save))
         return self
 
-    def do_warping(self, sr_object, path_to_save_warped=opt.warped_dir, save_stack=True):
+    def do_warping(self, sr_object, path_to_save_warped, save_stack=True):
         """
         Apply StackReg object to do transformation on BioImages instances.
 
@@ -175,12 +172,8 @@ class BioImage:
         """
         sys.stdout.write("Doing Warping..\n")
         # Iterate through MD images and apply transformation to red channel (frame 0)
-        if opt.sl2:
-            W1 = self._image_bgn_md[1, :, :]  # Red chanel (frame 0)
-            W2 = self._image_bgn_md[0, :, :]  # Green chanel (frame 1)
-        else:
-            W1 = self._image_bgn_md[0, :, :]  # Red chanel (frame 0)
-            W2 = self._image_bgn_md[1, :, :]  # Green chanel (frame 1)
+        W1 = self._image_bgn_md[0, :, :]  # Red chanel (frame 0)
+        W2 = self._image_bgn_md[1, :, :]  # Green chanel (frame 1)
         # Test Swapping Channels
         # W1 = self._image_bgn_md[1, :, :]  # Green chanel (frame 1)
         # W2 = self._image_bgn_md[0, :, :]  # Red chanel (frame 0)

@@ -13,12 +13,14 @@ Please change:
 ####################
 # INPUTS AND OUTPUTS
 # ##################
-# import sys
+import sys
 
-dataset = ""                                 # *** replace with your working dir name
-test = True
+dataset = sys.argv[1]  # sys.argv[1]  "test_C/B1"
+# option = sys.argv[2]  # --all, --beads, --pp,
+# "intensities_test/beads_250"            # *** replace with your working dir name
+test = False
 if test:
-    dataset += "sla2/sla2_C"  # sys.argv[1]
+    dataset += "/sla2/sla2_C"  # sys.argv[1]
 # ======================
 # Working Directory
 working_dir = "../{}/".format(dataset)
@@ -42,17 +44,15 @@ results_dir = output_dir + "results/"
 ###########
 # OPTIONS
 # #########
-# Picco or Altair? Or both?
-Picco = False
-Altair = True
-
-# Sla2 test: only True if running with Sla2 images
-sl2 = True  # warping is done with green - red, not red - green 
-# Preprocessing: Background Subtraction, Medial Filter, Warping
-preprocessing = True
-# Spot Detection and Linking
+# PREPROCESSING: Background Subtraction, Medial Filter, Warping
+mass_selection = False
+bead_registration = True
+preprocessing = False
+# DETECTION & LINKING
 detect_spots = True
-# Spot Selection: Segmentation, Gaussian Fitting, KDE, Outlier Rejection
+# WARPING
+warping = True
+# SELECTION: Segmentation, KDE, Gaussian Fitting, Outlier Rejection
 segmentation_preprocess = True
 gaussian_fit = True
 kde = True
@@ -64,16 +64,24 @@ outlier_rejection = True
 # #########
 # IMAGE PRE-PROCESSING: Background Subtraction, Medial Filter, Warping
 rolling_ball_radius = 70
-medial_filter_radius = 10
+median_filter_radius = 10
 # SPOT DETECTION AND LINKING
-particle_radius = 11   # must be an odd number.
-percentile = 99.6      # float. Percentile (%) that determines which bright pixels are accepted as Particles.
-max_displacement = 3   # LINK PARTICLES INTO TRAJECTORIES
+particle_radius = 11      # must be an odd number.
+percentile = 99.7         # float. Percentile (%) that determines which bright pixels are accepted as spots.
+max_mass_cutoff = 0.97    # Reject the upper right of this cutoff (in tant per 1)
+min_mass_cutoff = 0.05    # Reject the upper left  of this cutoff (in tant per 1)
+max_displacement = 2      # LINK PARTICLES INTO TRAJECTORIES
 
 # SEGMENTATION:
 # Cutoffs to select spots based on distance to contour and closest neighbour
-cont_cutoff = 10
+cont_cutoff = 13
 neigh_cutoff = 9
+
+# OUTLIER REJECTION
+# Deprecated, know using the median and std from the raw distribution of distances
+# to start the optimization
+mu_ini = 50
+sigma_ini = 50
 
 # Set to true to rescale the input images to reduce segmentation time
 rescale = False

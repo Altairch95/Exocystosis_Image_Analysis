@@ -18,6 +18,8 @@ import glob
 
 import pandas as pd
 import numpy as np
+from matplotlib import pyplot as plt
+import seaborn as sns
 
 import options as opt
 from skimage.io import imread, imsave
@@ -40,40 +42,40 @@ from mrcnn.convert_to_image import convert_to_image, convert_to_imagej
 # ======================
 
 
-def segment_yeast():
+def segment_yeast(segment_dir, images_dir, scale_factor, rescale, verbose):
     """
     Method to segment yeast cells using YeastSpotter software
     (https://github.com/alexxijielu/yeast_segmentation)
     """
-    if opt.segment_dir != '' and not os.path.isdir(opt.segment_dir):
-        os.mkdir(opt.segment_dir)
+    if segment_dir != '' and not os.path.isdir(segment_dir):
+        os.mkdir(segment_dir)
 
-    if os.path.isdir(opt.segment_dir):
-        if len(os.listdir(opt.segment_dir)) > 0:
-            logging.error("ERROR: Make sure that the output directory to save masks to is empty.")
+    if os.path.isdir(segment_dir):
+        if len(os.listdir(segment_dir)) > 0:
+            logging.error("ERROR: Make sure that the output directory to save masks is empty.")
         else:
-            preprocessed_image_directory = opt.segment_dir + "preprocessed_images/"
-            preprocessed_image_list = opt.segment_dir + "preprocessed_images_list.csv"
-            rle_file = opt.segment_dir + "compressed_masks.csv"
-            output_mask_directory = opt.segment_dir + "masks/"
-            output_imagej_directory = opt.segment_dir + "imagej/"
+            preprocessed_image_directory = segment_dir + "preprocessed_images/"
+            preprocessed_image_list = segment_dir + "preprocessed_images_list.csv"
+            rle_file = segment_dir + "compressed_masks.csv"
+            output_mask_directory = segment_dir + "masks/"
+            output_imagej_directory = segment_dir + "imagej/"
 
             # Preprocess the images
-            if opt.verbose:
+            if verbose:
                 logging.info("\nPreprocessing your images...")
-            preprocess_images(opt.images_dir,
+            preprocess_images(images_dir,
                               preprocessed_image_directory,
                               preprocessed_image_list,
-                              verbose=opt.verbose)
+                              verbose=verbose)
 
             if opt.verbose:
                 logging.info("\nRunning your images through the neural network...")
             predict_images(preprocessed_image_directory,
                            preprocessed_image_list,
                            rle_file,
-                           rescale=opt.rescale,
-                           scale_factor=opt.scale_factor,
-                           verbose=opt.verbose)
+                           rescale=rescale,
+                           scale_factor=scale_factor,
+                           verbose=verbose)
 
             if opt.save_masks:
                 if opt.verbose:
@@ -83,9 +85,9 @@ def segment_yeast():
                     convert_to_image(rle_file,
                                      output_mask_directory,
                                      preprocessed_image_list,
-                                     rescale=opt.rescale,
-                                     scale_factor=opt.scale_factor,
-                                     verbose=opt.verbose)
+                                     rescale=rescale,
+                                     scale_factor=scale_factor,
+                                     verbose=verbose)
 
                     convert_to_imagej(output_mask_directory,
                                       output_imagej_directory)
@@ -93,9 +95,9 @@ def segment_yeast():
                     convert_to_image(rle_file,
                                      output_mask_directory,
                                      preprocessed_image_list,
-                                     rescale=opt.rescale,
-                                     scale_factor=opt.scale_factor,
-                                     verbose=opt.verbose)
+                                     rescale=rescale,
+                                     scale_factor=scale_factor,
+                                     verbose=verbose)
 
             os.remove(preprocessed_image_list)
 
@@ -113,11 +115,19 @@ def read_csv_2(file):
     """
     Function to read multiple csv (input data)
     """
-    cols = ["x", "y", "m0", "m2", "m11", "m20", "m02"]
-    num = file.split("/")[-1].split("_")[2]
-    df = pd.read_csv(file, sep="\s+", names=cols, usecols=[0, 1, 2, 3, 9, 10, 11])
-    df["img"] = num
-    return df
+    channel = file.split("/")[-1].split(".")[0].split("_")[3]
+    df = pd.read_csv(file, sep="\t")  # sep="\t"
+    if len(df) != 0:
+        df.loc[:, "channel"] = channel
+        return df
+
+
+def calculate_distances(df_1, df_2):
+    """
+    Calculate distances (in nm) between coloc. spots
+    """
+    return np.sqrt(
+        (df_1.x.to_numpy() - df_2.x.to_numpy()) ** 2 + (df_1.y.to_numpy() - df_2.y.to_numpy()) ** 2) * 64.5
 
 
 def get_label_coords(contour_label):
@@ -217,13 +227,20 @@ def distance_to_neigh(df_spots):
     distances_neigh = list()
     for coord in df_spots.to_numpy():
         d_neigh = np.linalg.norm(coord - df_spots.to_numpy(), axis=1)
-        # check first 2 min distances (the min is  because its against the same spot, the closest spots
-        # corresponds to the 2nd min dist)
-        min_indexes = np.argpartition(d_neigh, 2)
-        closest_neigh_dist = d_neigh[min_indexes[:2][1]]  # get the second min distance
-        closest_neigh_idx = np.where(d_neigh == closest_neigh_dist)
-        closest_neigh_spot = tuple(df_spots.to_numpy()[closest_neigh_idx][0])
-        distances_neigh.append((closest_neigh_dist, closest_neigh_spot))
+        # Check if more than 2 spots on the image
+        if len(df_spots.to_numpy()) > 2:
+            # check first 2 min distances (the min is 0 because its against the same spot, the closest spots
+            # corresponds to the 2nd min dist)
+            min_indexes = np.argpartition(d_neigh, 2)  # needs more than 2 elements in the list
+            closest_neigh_dist = d_neigh[min_indexes[:2][1]]  # get the second min distance
+            closest_neigh_idx = np.where(d_neigh == closest_neigh_dist)
+            closest_neigh_spot = tuple(df_spots.to_numpy()[closest_neigh_idx][0])
+            distances_neigh.append((closest_neigh_dist, closest_neigh_spot))
+        elif len(df_spots.to_numpy()) == 2:
+            closest_neigh_dist = d_neigh[1]
+            closest_neigh_idx = np.where(d_neigh == closest_neigh_dist)
+            closest_neigh_spot = tuple(df_spots.to_numpy()[closest_neigh_idx][0])
+            distances_neigh.append((closest_neigh_dist, closest_neigh_spot))
     return distances_neigh
 
 
@@ -249,19 +266,19 @@ def sort_by_distances(spots_df, contour_coords, cont_cutoff=10, neigh_cutoff=10)
     # Add distances and coords to dataframe
     sub_df.loc[:, "dist_cont"], cont_coord_list = list(zip(*contour_distances))
     sub_df.loc[:, "contour_x"], sub_df.loc[:, "contour_y"] = list(zip(*cont_coord_list))
-    sub_df.loc[:, "dist_neigh"], neigh_coord_list = list(zip(*neigh_distances))
-    sub_df.loc[:, "neigh_x"], sub_df.loc[:, "neigh_y"] = list(zip(*neigh_coord_list))
+    if len(neigh_distances) > 0:
+        sub_df.loc[:, "dist_neigh"], neigh_coord_list = list(zip(*neigh_distances))
+        sub_df.loc[:, "neigh_x"], sub_df.loc[:, "neigh_y"] = list(zip(*neigh_coord_list))
 
-    ###########################################################
-    # Spot selection based on distance to contour and distance
-    ###########################################################
+    ########################################################################
+    # Spot selection based on distance to contour and distance to neighbours
+    ########################################################################
     # Label dataset with a "Selected" column
-    sub_df.loc[:, 'selected'] = np.where((sub_df["dist_cont"] <= cont_cutoff) &
-                                         (sub_df["dist_neigh"] > neigh_cutoff), "sel", "non-sel")
-    # Add selection reason on a description column
-    fulfill_text = "- Fulfill dist_cont and dist_neigh <br>"
-    non_fulfill_text = "- Do not fulfill dist_cont and/or dist_neigh <br>"
-    sub_df.loc[:, 'reason'] = np.where((sub_df["selected"] == "sel"), fulfill_text, non_fulfill_text)
+    if "dist_cont" in sub_df.columns and "dist_neigh" in sub_df.columns:
+        sub_df.loc[:, 'selected'] = np.where((sub_df["dist_cont"] <= cont_cutoff) &
+                                             (sub_df["dist_neigh"] > neigh_cutoff), "sel", "non-sel")
+    elif "dist_cont" in sub_df.columns:
+        sub_df.loc[:, 'selected'] = np.where((sub_df["dist_cont"] <= cont_cutoff), "sel", "non-sel")
     selection_df = spots_df.loc[(sub_df['selected'] == "sel")]
     # write to log percentage of selection
     num_selected = len(selection_df)
@@ -290,6 +307,7 @@ def save_html_figure(path_to_save, spots_df, img_num, img_contour_lab, ch_name="
     selected = spots_df[spots_df["selected"] == "sel"]
     non_selected = spots_df[spots_df["selected"] == "non-sel"]
     percent_sel = round(len(selected) * 100 / (len(selected) + len(non_selected)), 3)
+
     # Create figure with lines to closest contour and closest neighbour
     foo_note = "<br>Number of Selected spots: {} / {} (Percentage = {} %)<br><br>".format(len(selected),
                                                                                           len(selected) + len(
@@ -302,12 +320,15 @@ def save_html_figure(path_to_save, spots_df, img_num, img_contour_lab, ch_name="
     fig_label_cont.update_layout(coloraxis_showscale=False)
 
     # Plot spots with custom hover information
+    if "dist_neigh" in selected.columns:
+        custom_data = np.stack(([selected["dist_cont"], selected["dist_neigh"]]), axis=1)
+    else:
+        custom_data = selected["dist_cont"]
     fig_label_cont.add_scatter(x=selected["y"], y=selected["x"],
                                mode="markers",
                                marker=dict(color="green", size=7),
                                name="selected",
-                               customdata=np.stack(([selected["dist_cont"],
-                                                     selected["dist_neigh"]]), axis=1),
+                               customdata=custom_data,
                                hovertemplate=
                                '<b>x: %{x: }</b><br>'
                                '<b>y: %{y: } <b><br>'
@@ -318,8 +339,7 @@ def save_html_figure(path_to_save, spots_df, img_num, img_contour_lab, ch_name="
                                mode="markers",
                                marker=dict(color="red"),
                                name="non-selected",
-                               customdata=np.stack(([non_selected["dist_cont"],
-                                                     non_selected["dist_neigh"]]), axis=1),
+                               customdata=custom_data,
                                hovertemplate=
                                '<b>x: %{x: }</b><br>'
                                '<b>y: %{y: } <b><br>'
@@ -341,27 +361,20 @@ def save_html_figure(path_to_save, spots_df, img_num, img_contour_lab, ch_name="
                 name="{}".format(row["dist_cont"]), showlegend=False))
 
     # Plot orange lines from spots to its corresponding closest neighbour
-    for index, row in spots_df.iterrows():
-        fig_label_cont.add_trace(
-            go.Scatter(
-                x=[row["y"], row["neigh_y"]],
-                y=[row["x"], row["neigh_x"]],
-                mode="lines",
-                line=go.scatter.Line(color="orange"),
-                name="{}".format(row["dist_neigh"]), showlegend=False))
-
-    # fig_label_cont.show(config={'modeBarButtonsToAdd': ['drawline',
-    #                                                     'drawopenpath',
-    #                                                     'drawclosedpath',
-    #                                                     'drawcircle',
-    #                                                     'drawrect',
-    #                                                     'eraseshape'
-    #                                                     ]})
-    # plotly.io.to_html(path_to_save + "image_{}_{}.html".format(img_num, ch_name))
+    if "dist_neigh" in selected.columns:
+        for index, row in spots_df.iterrows():
+            fig_label_cont.add_trace(
+                go.Scatter(
+                    x=[row["y"], row["neigh_y"]],
+                    y=[row["x"], row["neigh_x"]],
+                    mode="lines",
+                    line=go.scatter.Line(color="orange"),
+                    name="{}".format(row["dist_neigh"]), showlegend=False))
     fig_label_cont.write_html(path_to_save + "pp_segmented/" + "image_{}_{}.html".format(img_num, ch_name))
 
 
-def main_segmentation():
+def main_segmentation(segment_dir, images_dir, spots_dir, results_dir, figures_dir, scale_factor,
+                      cont_cutoff, neigh_cutoff, rescale=False, verbose=False):
     """
     1) Main method to run segmentation preprocessing.
     """
@@ -376,12 +389,12 @@ def main_segmentation():
     ###############
     # Segment yeast cells if not segmented
     if not os.path.exists(opt.segment_dir):
-        os.mkdir(opt.segment_dir)
-        segment_yeast()  # saves contour images in output/masks/
+        os.mkdir(segment_dir)
+        segment_yeast(segment_dir, images_dir, scale_factor, rescale, verbose)  # saves contour images in output/masks/
         print("\n\nCell Segmentation Finished!\n\n")
     elif not len(glob.glob(opt.images_dir + "image_*")) == len(glob.glob(opt.segment_dir + "masks/image_*")):
-        shutil.rmtree(opt.segment_dir)
-        segment_yeast()  # saves contour images in output/masks/
+        shutil.rmtree(segment_dir)
+        segment_yeast(segment_dir, images_dir, scale_factor, rescale, verbose)  # saves contour images in output/masks/
         print("\n\nCell Segmentation Finished!\n\n")
     else:
         pass
@@ -391,104 +404,104 @@ def main_segmentation():
     percent_sel_total = list()
     total_data = 0
     total_selected = 0
-    if os.path.exists(opt.segment_dir + "masks/") and len(os.listdir(opt.segment_dir + "masks/")) != 0:
-        for img_file in glob.glob(opt.segment_dir + "masks/image_*"):
+    if os.path.exists(segment_dir + "masks/") and len(os.listdir(segment_dir + "masks/")) != 0:
+        ###########################################################
+        # Calculate distance to contour and closest neighbour distance
+        ###########################################################
+        for img_file in glob.glob(segment_dir + "masks/image_*"):
             start = time.time()
             image_number = img_file.split("/")[-1].split("_")[-1].split(".")[0]
             print("Processing image {} ...\n".format(image_number))
-            ###########################################################
-            # Calculate distance to contour and closest neighbour distance
-            ###########################################################
             # Read contour image and labeled image
-            image_labels = imread(opt.segment_dir + "masks/image_{}.tif".format(image_number)).astype(np.uint8)
-            image_contour = imread(opt.segment_dir + "masks/contour_image_{}.tif".format(image_number)) \
+            image_labels = imread(segment_dir + "masks/image_{}.tif".format(image_number)).astype(np.uint8)
+            image_contour = imread(segment_dir + "masks/contour_image_{}.tif".format(image_number)) \
                 .astype(np.uint8)
 
             # clean mother-bud cell barriers
             # Avoid doing this step if already done
-            if not len(glob.glob(opt.segment_dir + "masks/image_*")) == len(glob.glob(opt.segment_dir +
-                                                                                            "masks/contour_mod*")):
+            if not len(glob.glob(segment_dir + "masks/image_*")) == len(glob.glob(segment_dir +
+                                                                                  "masks/contour_mod*")):
                 print("\tCleaning mother-daugther cells...\n")
                 clean_mother_daugther(image_number, image_contour, image_labels)  # generates an contour_mod image
-                image_contour_mod = imread(opt.segment_dir + "masks/contour_mod_{}.tif".format(image_number)) \
+                image_contour_mod = imread(segment_dir + "masks/contour_mod_{}.tif".format(image_number)) \
                     .astype(np.uint8)
             else:
-                image_contour_mod = imread(opt.segment_dir + "masks/contour_mod_{}.tif".format(image_number)) \
+                image_contour_mod = imread(segment_dir + "masks/contour_mod_{}.tif".format(image_number)) \
                     .astype(np.uint8)
-
-            # Load spot coordinates for W1_warped and W2
-            if opt.Picco:
-                spots_df_W1 = read_csv_2(opt.spots_dir +
-                                         "detected_spot_{}_W1_warped".format(image_number))  # Spot coordinates W1
-                spots_df_W2 = read_csv_2(opt.spots_dir +
-                                         "detected_spot_{}_W2".format(image_number))  # Spot coordinates W2
-            elif opt.Altair:
-                spots_df_W1 = pd.read_csv(opt.spots_dir + "csv/" +
-                                         "detected_spot_{}_W1_warped.csv".format(image_number),
+            # Reading data from detected spots files in spots/
+            # Check if file exists (meaning that trackpy could link spots on that image
+            if os.path.exists(f'{spots_dir}detected_spot_{image_number}_W1_warped.csv') and os.path.exists(
+                    f'{spots_dir}detected_spot_{image_number}_W2.csv'):
+                spots_df_W1 = pd.read_csv(f'{spots_dir}detected_spot_{image_number}_W1_warped.csv',
                                           sep="\t", index_col=False)  # Spot coordinates W1
-                spots_df_W2 = pd.read_csv(opt.spots_dir + "csv/" +
-                                         "detected_spot_{}_W2.csv".format(image_number),
+                spots_df_W2 = pd.read_csv(f'{spots_dir}detected_spot_{image_number}_W2.csv',
                                           sep="\t", index_col=False)  # Spot coordinates W2
-            total_data += spots_df_W1.shape[0]
+                total_data += spots_df_W1.shape[0]
 
-            # Add ID to each data point (spot)
-            spots_df_W1.loc[:, "ID"] = list(range(1, spots_df_W1.shape[0] + 1))
-            spots_df_W2.loc[:, "ID"] = list(range(1, spots_df_W2.shape[0] + 1))
+                # Add ID to each data point (spot)
+                spots_df_W1.loc[:, "ID"] = list(range(1, spots_df_W1.shape[0] + 1))
+                spots_df_W2.loc[:, "ID"] = list(range(1, spots_df_W2.shape[0] + 1))
 
-            ###############################################
-            # Sort by closest distance to contour and neigh
-            ###############################################
-            print("\tSorting spots...\n")
-            cell_contour = np.where(image_contour_mod > 0)  # Group coordinates per cell (according to labels)
-            cell_contour_coords = np.array(list(zip(cell_contour[0], cell_contour[1])))
-            selection_df_W1, sub_df_W1, percent_sel_W1 = sort_by_distances(spots_df_W1,
-                                                                           cell_contour_coords,
-                                                                           cont_cutoff=opt.cont_cutoff,
-                                                                           neigh_cutoff=opt.neigh_cutoff)
-            selection_df_W2, sub_df_W2, percent_sel_W2 = sort_by_distances(spots_df_W2,
-                                                                           cell_contour_coords,
-                                                                           cont_cutoff=opt.cont_cutoff,
-                                                                           neigh_cutoff=opt.neigh_cutoff)
-            # Pair selected in W1 & W2
-            selection_df_paired_W1 = selection_df_W1.loc[(selection_df_W1["ID"].isin(selection_df_W2["ID"]))]
-            selection_df_paired_W2 = selection_df_W2.loc[(selection_df_W2["ID"].isin(selection_df_W1["ID"]))]
-            # Assert shape W1 == shape W2
-            assert set(selection_df_paired_W1.ID) == set(selection_df_paired_W2.ID)
-            # update selected & non-selected values after pairing
-            sub_df_W1["selected"] = np.where(~sub_df_W1["x"].isin(selection_df_paired_W1["x"]), "non-sel",
-                                             sub_df_W1["selected"])
-            sub_df_W2["selected"] = np.where(~sub_df_W2["x"].isin(selection_df_paired_W2["x"]), "non-sel",
-                                             sub_df_W2["selected"])
+                ###############################################
+                # Sort by closest distance to contour and neigh
+                ###############################################
+                print("\tSorting spots...\n")
+                cell_contour = np.where(image_contour_mod > 0)  # Group coordinates per cell (according to labels)
+                cell_contour_coords = np.array(list(zip(cell_contour[0], cell_contour[1])))
+                selection_df_W1, sub_df_W1, percent_sel_W1 = sort_by_distances(spots_df_W1,
+                                                                               cell_contour_coords,
+                                                                               cont_cutoff=cont_cutoff,
+                                                                               neigh_cutoff=neigh_cutoff)
+                selection_df_W2, sub_df_W2, percent_sel_W2 = sort_by_distances(spots_df_W2,
+                                                                               cell_contour_coords,
+                                                                               cont_cutoff=cont_cutoff,
+                                                                               neigh_cutoff=neigh_cutoff)
+                # Pair selected in W1 & W2
+                selection_df_paired_W1 = selection_df_W1.loc[(selection_df_W1["ID"].isin(selection_df_W2["ID"]))]
+                selection_df_paired_W2 = selection_df_W2.loc[(selection_df_W2["ID"].isin(selection_df_W1["ID"]))]
+                # Assert shape W1 == shape W2
+                assert set(selection_df_paired_W1.ID) == set(selection_df_paired_W2.ID)
+                # update selected & non-selected values after pairing
+                sub_df_W1["selected"] = np.where(~sub_df_W1["x"].isin(selection_df_paired_W1["x"]), "non-sel",
+                                                 sub_df_W1["selected"])
+                sub_df_W2["selected"] = np.where(~sub_df_W2["x"].isin(selection_df_paired_W2["x"]), "non-sel",
+                                                 sub_df_W2["selected"])
 
-            # write to log percentage of selection
-            num_selected = selection_df_paired_W1.shape[0]
-            percent_sel = num_selected * 100 / spots_df_W1.shape[0]
-            logging.info("\nImage {} --> {:02} / {:02} "
-                         "spots selected.. --> {} %".format(image_number, num_selected, len(spots_df_W1), percent_sel))
-            total_selected += num_selected
+                # write to log percentage of selection
+                num_selected = selection_df_paired_W1.shape[0]
+                percent_sel = num_selected * 100 / spots_df_W1.shape[0]
+                logging.info("\nImage {} --> {:02} / {:02} "
+                             "spots selected.. --> {} %".format(image_number, num_selected, len(spots_df_W1), percent_sel))
+                total_selected += num_selected
 
-            # Save df as csv: segmentation.csv
-            if not os.path.exists(opt.results_dir):
-                os.mkdir(opt.results_dir)
-            if not os.path.exists(opt.results_dir + "segmentation/"):
-                os.mkdir(opt.results_dir + "segmentation/")
-            selection_df_paired_W1.to_csv(opt.results_dir + "segmentation/" +
-                                          "detected_seg_{}_{}.csv".format(image_number, "W1"),
-                                          sep=",", encoding="utf-8", header=True, index=False)
-            selection_df_paired_W2.to_csv(opt.results_dir + "segmentation/" +
-                                          "detected_seg_{}_{}.csv".format(image_number, "W2"),
-                                          sep=",", encoding="utf-8", header=True, index=False)
+                # Save df as csv: segmentation.csv
+                if not os.path.exists(results_dir):
+                    os.mkdir(opt.results_dir)
+                if not os.path.exists(results_dir + "segmentation/"):
+                    os.mkdir(results_dir + "segmentation/")
+                # If number of selected spots = 0, warn but not create file
+                if num_selected > 0:
+                    selection_df_paired_W1.to_csv(results_dir + "segmentation/" +
+                                                  "detected_seg_{}_{}.csv".format(image_number, "W1"),
+                                                  sep="\t", encoding="utf-8", header=True, index=False)
+                    selection_df_paired_W2.to_csv(results_dir + "segmentation/" +
+                                                  "detected_seg_{}_{}.csv".format(image_number, "W2"),
+                                                  sep="\t", encoding="utf-8", header=True, index=False)
+                else:
+                    if os.path.exists(results_dir + f"{results_dir}segmentation/detected_seg_{image_number}_W1.csv"):
+                        os.remove(results_dir + f"{results_dir}segmentation/detected_seg_{image_number}_W1.csv")
+                    if os.path.exists(results_dir + f"{results_dir}segmentation/detected_seg_{image_number}_W2.csv"):
+                        os.remove(results_dir + f"{results_dir}segmentation/detected_seg_{image_number}_W2.csv")
+                # Create figure with lines to the closest contour and closest neighbour
+                save_html_figure(figures_dir, sub_df_W1, image_number, image_contour_mod, ch_name="W1")
+                save_html_figure(figures_dir, sub_df_W2, image_number, image_contour_mod, ch_name="W2")
 
-            # Create figure with lines to the closest contour and closest neighbour
-            save_html_figure(opt.figures_dir, sub_df_W1, image_number, image_contour_mod, ch_name="W1")
-            save_html_figure(opt.figures_dir, sub_df_W2, image_number, image_contour_mod, ch_name="W2")
-
-            # Append percentages to list to write in report (log.txt)
-            percent_sel_total_W1.append(percent_sel_W1)
-            percent_sel_total_W2.append(percent_sel_W2)
-            percent_sel_total.append(percent_sel)
-            total_time = time.time() - start
-            print("Image {} processed in {} s\n".format(image_number, round(total_time, 3)))
+                # Append percentages to list to write in report (log.txt)
+                percent_sel_total_W1.append(percent_sel_W1)
+                percent_sel_total_W2.append(percent_sel_W2)
+                percent_sel_total.append(percent_sel)
+                total_time = time.time() - start
+                print("Image {} processed in {} s\n".format(image_number, round(total_time, 3)))
 
     logging.info("\n\nTotal Percent W1 --> {} %\n"
                  "Total Percent W2 --> {} %\n\n"
@@ -497,9 +510,40 @@ def main_segmentation():
                                                            sum(percent_sel_total) / len(percent_sel_total)))
     print("\n\nTotal Percent W1 --> {} %\n"
           "Total Percent W2 --> {} %\n\n"
-          "Total Paired Percent --> {} % \n".format(sum(percent_sel_total_W1) / len(percent_sel_total_W1),
-                                                    sum(percent_sel_total_W2) / len(percent_sel_total_W2),
-                                                    sum(percent_sel_total) / len(percent_sel_total)))
+          "Total Paired Percent --> {} % ({} spots) \n".format(sum(percent_sel_total_W1) / len(percent_sel_total_W1),
+                                                               sum(percent_sel_total_W2) / len(percent_sel_total_W2),
+                                                               sum(percent_sel_total) / len(percent_sel_total),
+                                                               total_selected))
+    # MEASURE DISTANCE DISTRIBUTION AFTER GAUSSIAN
+    # Load data ensuring that W1 & W2 are paired
+    df_W1 = pd.concat(map(read_csv_2, sorted(glob.glob(results_dir + "segmentation/detected_seg_*W1*"))),
+                      ignore_index=True)
+    df_W2 = pd.concat(map(read_csv_2, sorted(glob.glob(results_dir + "segmentation/detected_seg_*W2*"))),
+                      ignore_index=True)
+    initial_distances = np.loadtxt(results_dir + "distances_after_warping.csv")
+    distances_seg = calculate_distances(df_W1, df_W2)
+    np.savetxt(results_dir + "segmentation/seg_distances.csv", distances_seg, delimiter=",")
+
+    # PLOT NEW DISTANCE DISTRIBUTION
+    fig, ax = plt.subplots(figsize=(25, 15))
+    sns.set(font_scale=3)
+    ax.set_title("Distances after KDE selection\n\n"
+                 "mean detection = {} nm; stdev detection = {} nm; n = {}\n"
+                 "mean seg = {} nm; stdev seg = {} nm; "
+                 "n = {} \n".format(np.around(np.mean(initial_distances), 2),
+                                    np.around(np.std(initial_distances), 2),
+                                    len(initial_distances),
+                                    np.around(np.mean(distances_seg), 2),
+                                    np.around(np.std(distances_seg), 2),
+                                    len(distances_seg)),
+                 fontweight="bold", size=25)
+    sns.histplot(data=initial_distances, kde=True, color="sandybrown", ax=ax, fill=True)
+    sns.histplot(data=distances_seg, kde=True, ax=ax, color="cornflowerblue", fill=True)
+    ax.set_xlabel("$Distances \ (nm) $", fontsize=45, labelpad=30)
+    ax.set_ylabel("$Count $", fontsize=45, labelpad=30)
+    ax.axvline(x=np.mean(initial_distances), color='sandybrown', ls='--', lw=2.5, alpha=0.8)
+    ax.axvline(x=np.mean(distances_seg), color='cornflowerblue', ls='--', lw=2.5, alpha=0.8)
+    plt.savefig(figures_dir + "pp_segmented/" + "distances_after_segmentation.png")
     return total_data, total_selected
 
 

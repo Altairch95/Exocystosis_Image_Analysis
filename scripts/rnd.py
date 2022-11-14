@@ -41,8 +41,8 @@ def pdf(l, mu, sigma):
 
 def cdf(mu, sigma, dx=0.01, x0=0, x1=2 * 1E2):
     """
-    Return the cumulative pdf of the data given the function
-    that describes the distribution of the data
+    Return the cumulative probability density function
+    of the data given the function in churchman
     Parameters
     ----------
     mu
