@@ -217,8 +217,8 @@ From the input images, the program runs through different steps:
 
 ##### 1) **Beads Registration**:
 - Bead registration: isolated beads are detected for each channel. Agglomerations of beads, or beads shinning with
-   low intensity are excluded based on the 0-th moment \\(M_{00}\\) of brightness (excluding the beads with an \\(M_{00}\\)
-   falling on the 1st and 95th percentile).
+   low intensity are excluded based on the 0-th moment <i>M<sub>00</<sub></i> of brightness (excluding the beads with an 
+   <i>M<sub>00</<sub></i> falling on the *1st* and *95th* percentile).
 - Bead transformation: selected beads are transformed (aligned) and the transformation matrix is saved. For the 
    alignment, beads selected in W1 (red, mov) are aligned to the beads selected in W2 (green, reference).
         
