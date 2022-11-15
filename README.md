@@ -31,15 +31,16 @@ How does it work?
 -----------
 
 PICT-MODELLER utilizes bioimage analysis tools that allows for the **processing** (*Background subtraction*, *chromatic
-aberration correction*, and *spot detection*) and **analysis** of live-cell imaging (fluorescence microscopy) data to 
-estimate the pair-wise distance between a fluorophore flagging the terminus of a protein complex (prey-GFP) and a static
-intracellular anchor site (anchor-RFP). From a dataset of 20 - 30 images, PICT-MODELLER estimates the μ and σ parameters 
-of the final distance distribution with a precision below 5 nm.
+aberration correction*, and *spot detection*) and **analysis** of live-cell imaging (fluorescence microscopy) data. The 
+set of image analysis functions can be used to estimate the pair-wise distance between a fluorophore flagging the terminus
+of a protein complex (prey-GFP) and a static intracellular anchor site (anchor-RFP). From a dataset of 20 - 30 images, 
+PICT-MODELLER estimates the μ and σ values of the final distance distribution with a precision below 5 nm.
 
-PICT-MODELLER can use the set of pairwise distances to determine the relative fluorophore positions by trilateration.
-The Integrative Modeling Platform <a href=https://integrativemodeling.org/>(IMP)</a> can be used to integrate the 
-distribution of fluorophore positions (determined from *in situ* data) with available structural information (obtained
- *in vitro*) to recapitulate the architecture of the protein complex in its close-to-native environment.
+PICT-MODELLER can also use the set of pairwise distances to trilaterate the fluorophores's relative positions.Each 
+fluorophore position is determined by a steepest descend algorithm (Conjugate Gradients). The best scoring positions 
+(those that fit better with the input data) can be integrated with available structural information using the
+[Integrative Modeling Platform](https://integrativemodeling.org/) to recapitulate the architecture of the protein complex
+in its close-to-native environment ([Picco A., et al, 2017](https://www.sciencedirect.com/science/article/pii/S0092867417300521)).
 
 
 Instructions
@@ -51,17 +52,19 @@ to run the image analysis and modeling scripts without the need of installation.
 
 ### Run it locally
 
-You will need a machine running Linux, it does not support other operating systems.
+You will need a machine running Linux or MacOS, it does not support other operating systems.
 
-1) Download the git repo in your local computer and get into the folder, or run:
+1) Download the git repo in your local computer and get into the folder, or open  terminal and 
+   run the following command:
 
 ```bash
   $ git clone https://github.com/Altairch95/PICT-MODELLER
   $ cd PICT-MODELLER
  ```
-2) Download weights: PICT-MODELLER utilizes the pre-trained weights for the neural network that is used for yeast cell segmentation in 
-[Yeast Spotter](http://yeastspotter.csb.utoronto.ca/). The weights are necessary to run the software, but are too large
- to share on GitHub. You can download the zip file from this [Zenodo](https://zenodo.org/record/3598690) repository. 
+2) Download the CNN weights: PICT-MODELLER utilizes the pre-trained weights for the neural network that is used for 
+   yeast cell segmentation in [Yeast Spotter](http://yeastspotter.csb.utoronto.ca/). The weights are necessary to run 
+   the software, but are too large to share on GitHub. You can download the zip file from this 
+   [Zenodo](https://zenodo.org/record/3598690) repository. 
 
 Once downloaded, simply unzip it and move it to the *scripts/* directory. You can also run the following command:
 
@@ -108,14 +111,14 @@ The package has the following structure:
               
       test/
           input/
-              pict_images/
-              beads/
+              pict_images/            (5 images from the exocyst dataset)
+              beads/                  (the beads W1.tif and W2.tif used on the exocyst dataset)
 
 
 Image Analysis Tutorial
 -----------------------
 
-Image analysis can be divided into two steps. First, we processed images to measure the centroid positions of the 
+The image analysis can be divided into two steps. First, we processed images to measure the centroid positions of the 
 GFP and RFP tags. Then, we analyzed the distribution of these centroid positions to estimate the true separation between
 the GFP and RFP fluorophores using Single-molecule High-REsolution Colocalization (SHREC)
 ([Churchman et al. 2005](https://www.pnas.org/doi/abs/10.1073/pnas.0409487102), 
@@ -153,10 +156,10 @@ the GFP and RFP fluorophores using Single-molecule High-REsolution Colocalizatio
  ```
 
 The test is composed by 5 raw images located in the *input/pict_images/* folder. By running the test, 
-you should visualize on the terminal all the log of the image processing and image analysis steps. You 
-can also get track about the program steps in the *log.txt* file.
+you should visualize on the terminal all the *log* of the image processing and image analysis steps. You 
+can also track it on the *log.txt* file.
 
-You can check that the results are generated and saved in the *output/* folder with different sub-folders:
+The results are generated and saved in the *output/* folder with different sub-folders:
 <ul>
     <li>images: contains the processed images.</li>
     <li>spots: contains the data from spot detection on your PICT images.</li>
@@ -181,7 +184,7 @@ You can check that the results are generated and saved in the *output/* folder w
   $ mv path/to/pict-images/*.tif path/to/my_dir_name/pict_images/
  ```
 
-Run the software:
+Run the software with your data:
 
 ```bash
   $ python3 measure_pict_distances.py -d my_dir 
@@ -192,7 +195,7 @@ You may grab a coffee while waiting for the results :)
 Notebooks
 --------
 
-To be filled.
+Working on it.
 
 Notes
 --------
