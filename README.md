@@ -311,4 +311,7 @@ $$
 where <i>S(p<sub>δµ</sub>)</i>, <i>S(p<sub>δσ</sub>)</i> will be maimal when both scores <i>p<sub>δµ</sub></i> and 
 <i>p<sub>δσ</sub></i> will be similarly maximized.
 
-
+Acknowledgements
+----------
+We thank Alex Lu and co-workers ([Alex X Lu, et al., 2019](https://doi.org/10.1093/bioinformatics/btz402)) for having 
+no issues on sharing their yeast segmentation scripts.
