@@ -94,9 +94,10 @@ def load_data_for_kde(results_dir, figures_dir):
     # =====================
     # Load data ensuring that W1 & W2 are paired
     if not os.path.exists(f"{results_dir}gaussian_fit/"):
-        sys.stderr.write(f"PICT-WARNING: {results_dir}gaussian_fit/ does not exists or is empty."
+        sys.stderr.write(f"PICT-MODELLER-ERROR: {results_dir}gaussian_fit/ does not exists or is empty."
                          " Do you have spots detected after segmentation? :/\n"
                          "Double check it and re-run!\n\n\tThanks and good luck! :)\n")
+        sys.exit(1)
     # Loading segmented coordinates
     df_W1 = pd.concat(map(read_csv_2, sorted(glob.glob(f"{results_dir}gaussian_fit/detected_*W1*"))),
                       ignore_index=True)
@@ -229,7 +230,7 @@ def kde(df_W1, df_W2, df_data):
     percent_total = df_W1_sel.shape[0] * 100 / df_W1.shape[0]
 
     logging.info("\n\nTotal Paired Percent --> {} %\n".format(percent_total))
-    print(("\n\nTotal Paired Percent --> {} %  == {}\n".format(round(percent_total, 3), df_W1_sel.shape[0])))
+    print(("\n\nTotal Paired Percent --> {} %  == {} spots\n".format(round(percent_total, 3), df_W1_sel.shape[0])))
 
     # Save selected spots in a csv file
     if not os.path.exists(opt.results_dir + "kde/"):

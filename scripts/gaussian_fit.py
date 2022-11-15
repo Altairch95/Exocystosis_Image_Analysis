@@ -220,10 +220,17 @@ def main_gaussian(results_dir, images_dir, figures_dir):
     # R^2 cutoff to reject spots under this cutoff (reject surely bad spots)
     r2_cutoff = 0.35  # quality of spots above this r2 value
     # Load data from Segmentation Filter
+    if not os.path.exists(results_dir + 'segmentation/') or len(os.listdir(results_dir + 'segmentation/')) == 0:
+        sys.stderr.write('\nPICT-MODELLER-ERROR: Once upon a time, a brilliant human trying to hack PICT-MODELLER...'
+                         '!!\n Come on! Did you segmente your cells (option - segment)? No padre. \n'
+                         'I cannot proceed if I do not have info about your segmented spots...\n '
+                         'Please, run the segmentation first. \n'
+                         'Thanks! ;)\n\n')
+        sys.exit(1)
     data_seg_W1 = pd.concat(map(read_csv_2, sorted(glob.glob(f"{results_dir}segmentation/detected_seg_*W1.csv"))),
-                      ignore_index=True)
+                            ignore_index=True)
     data_seg_W2 = pd.concat(map(read_csv_2, sorted(glob.glob(f"{results_dir}segmentation/detected_seg_*W2.csv"))),
-                      ignore_index=True)
+                            ignore_index=True)
     percent_sel_total_W1 = list()
     percent_sel_total_W2 = list()
     percent_sel_total = list()
@@ -325,9 +332,11 @@ def main_gaussian(results_dir, images_dir, figures_dir):
     # WARNING!
     if len(percent_sel_total_W1) == 0 or len(percent_sel_total_W1) == 0 or len(percent_sel_total_W1) == 0:
         # WARNING: if no spots selected, we cannot continue!
-        sys.stderr.write('PICT-WARNING: 0 spots found in datasets or very few. Probably due to a short dataset'
-              'or poor quality images. \n\t\tWe recommend a minimum number of input images == 20.\n'
-              '\t\tPlease, review your input image dataset and quality and run it again.\n\n\tGood luck! :)\n\n')
+        sys.stderr.write('PICT-MODELLER-ERROR: 0 spots found in datasets or very few :( '
+                         'Probably due to a short dataset or poor quality images. \n'
+                         '\t\tWe recommend a minimum number of input images == 20.\n'
+                         '\t\tPlease, review your input image dataset and quality and run it again.\n\n'
+                         '\tGood luck! :)\n\n')
         sys.exit(1)
 
     print("\n\nTotal Gauss-filtered W1 --> {} %\n"

@@ -1,5 +1,6 @@
 import os
 import sys
+import time
 from argparse import ArgumentParser
 import matplotlib.pyplot as plt
 import seaborn as sns
@@ -65,14 +66,21 @@ def arg_parser():
                         dest='percentile',
                         action="store",
                         type=float,
-                        default=99.7,
+                        default=98.0,
                         help="Percentile to select spots according to intensity")
 
-    parser.add_argument('-cf',
-                        dest='cutoff',
+    parser.add_argument('--max_mass',
+                        dest='max_mass',
                         action="store",
                         type=float,
                         default=0.95,
+                        help="Cutoff to reject spots less brighter than the threshold")
+
+    parser.add_argument('--min_mass',
+                        dest='min_mass',
+                        action="store",
+                        type=float,
+                        default=0.05,
                         help="Cutoff to reject spots brighter than the threshold")
 
     parser.add_argument('--test',
@@ -484,7 +492,7 @@ def linking(path_to_beads, f_batch_selection, image_name, ndarray, percentile, m
                                           "non-sel")
     # PLOT selected after linking the two channels
     save_html_selected_detection(path_to_beads + "linked_spots/", f_batch, image_name, ndarray,
-                        percentile, min_mass_cutoff, max_mass_cutoff)
+                                 percentile, min_mass_cutoff, max_mass_cutoff)
 
     # Separate frame0 and frame1 in two df
     t_W1 = t[t["frame"] == 0]
@@ -659,11 +667,26 @@ def beads_registration(path_to_beads, percentile, min_mass_cutoff, max_mass_cuto
     # compute the affine transform from the point set
     new_coords = registration(path_to_beads, "_all", x_coords_W2, y_coords_W2, x_coords_W1, y_coords_W1)
 
-    # PLOT ORIGINA vs NEW COORDINATES
+    # PLOT ORIGINAL vs NEW COORDINATES
     original_distances = np.sqrt(
         (ref_coords[:, 0] - mov_coords[:, 0]) ** 2 + (ref_coords[:, 1] - mov_coords[:, 1]) ** 2) * 64.5
     new_distances = np.sqrt(
         (ref_coords[:, 0] - new_coords[:, 0]) ** 2 + (ref_coords[:, 1] - new_coords[:, 1]) ** 2) * 64.5
+
+    if verbose:
+        print("Beads Distances AFTER Warping\n\n"
+              "mean before = {} nm; stdev before = {} nm\n"
+              "mean after = {} nm; stdev after = {} nm \n".format(np.around(np.mean(original_distances), 2),
+                                                                  np.around(np.std(original_distances), 2),
+                                                                  np.around(np.mean(new_distances), 2),
+                                                                  np.around(np.std(new_distances)), 2))
+        time.sleep(2)
+    # If the corrected distance is bigger thant 10 nm, we should know it...
+    if np.around(np.mean(new_distances), 2) > 10:
+        sys.stderr.write('\n\tWatch out! The transformation matrix gives a correction of + 10 nm\n'
+                         '\tYou should take this into account when analysing the final distance distribution\n')
+        time.sleep(3)
+    # Plot it
     fig, ax = plt.subplots(figsize=(25, 15))
     sns.set(font_scale=3)
     ax.set_title("Beads Distances AFTER Warping\n\n"
@@ -683,19 +706,16 @@ def beads_registration(path_to_beads, percentile, min_mass_cutoff, max_mass_cuto
 
 
 if __name__ == "__main__":
-    # options = arg_parser()
-    # path = options.path
-    # pc = options.percentile
-    # cutoff = options.cutoff
-    path = "../260922_test_warping/F9_test/input/beads/"
-    pc = 98.0  # in tant per cent
-    max_mass = 0.95  # in tant per 1
-    min_mass = 0.05  # in tant per 1
+    beads_parsero = arg_parser()
+    path = beads_parsero.path
+    pc = beads_parsero.percentile  # in tant per cent
+    max_mass = beads_parsero.max_mass  # in tant per 1
+    min_mass = beads_parsero.min_mass  # in tant per 1
     # Separate frames and create pair stack of beads
     create_beads_stacks(path)
 
-    test = True
-    verbose = True
+    test = beads_parsero.test
+    verbose = beads_parsero.verbose
     if test:
         if verbose:
             print("\n\n⁺⁺⁺TESTING MODE ON⁺⁺⁺\n\n")

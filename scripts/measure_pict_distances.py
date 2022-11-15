@@ -1,17 +1,11 @@
 #!/usr/bin/python3.7
 # coding=utf-8
 """
-           26/09/22         ****************
-                            ** TO MODIFY **
-                            ****************
-
 #####################################################################
 ################# PICT-MOD MAIN PROGRAM ############################
 ####################################################################
 
 BioImage Analysis script to calculate distances from PICT experiments.
-
-[Elaborate program]
 
 0) Initialize program
 - Make sure that input directories are created
@@ -24,6 +18,12 @@ BioImage Analysis script to calculate distances from PICT experiments.
 
 1) Image Preprocessing: Background Subtraction, Median Filter,
 Chromatic aberration correction (Warping)
+- Bead registration:
+    - Check the intensity distribution on the bead images
+    - Generate registration of beads.
+    - Compute and save transformation matrix.
+    - Transform beads and check the median distance before and after transformation.
+
 - Read images from pict_images/ and apply background subtractions and
 subtract median filter from background.
     - Parameters in options.py (# IMAGE PRE-PROCESSING)
@@ -50,6 +50,8 @@ the nearest distance to contour and the distance to the nearest neighbour
 - output.csv --> mu = XX +- SErrxx ; sigma = YY +- SErryy ; n = Z
 
 """
+import time
+
 from calculate_PICT_distances import *
 from detect_beads import beads_registration, create_beads_stacks
 import matplotlib as mpl
@@ -65,105 +67,127 @@ __email__ = "altair.chinchilla@upf.edu"
 __status__ = "Development"
 
 # Set up logging files
-print(opt.working_dir)
+if opt.verbose:
+    print('\n\n\tRunning PICT-MOD!\n\n'
+          '\tYour paths: \n'
+          f'\t\t Working directory: {opt.working_dir}\n'
+          f'\t\t Input directory: {opt.input_dir}\n'
+          f'\t\t Output directory: {opt.output_dir}\n\n'
+          f'#########\n'
+          )
 if not os.path.exists(opt.working_dir + "log.txt"):
-	logging.basicConfig(filename=opt.working_dir + "log.txt", level=logging.DEBUG,
-						format="%(asctime)s %(message)s", filemode="w")
+    logging.basicConfig(filename=opt.working_dir + "log.txt", level=logging.DEBUG,
+                        format="%(asctime)s %(message)s", filemode="w")
 else:
-	logging.basicConfig(filename=opt.working_dir + "log.txt", level=logging.DEBUG,
-						format="%(asctime)s %(message)s", filemode="a")
+    logging.basicConfig(filename=opt.working_dir + "log.txt", level=logging.DEBUG,
+                        format="%(asctime)s %(message)s", filemode="a")
 
 logging.info("\n\n############################\n"
-			 "Image Analysis for LiveCellPICT \n"
-			 "################################\n\n"
-			 "\tDataset: {}\n"
-			 "\tWorking directory: {}\n"
-			 "\tInput directory: {}\n"
-			 "\tOutput directory: {}\n\n".format(opt.dataset, opt.working_dir, opt.input_dir, opt.output_dir))
+             "Image Analysis for LiveCellPICT \n"
+             "################################\n\n"
+             "\tDataset: {}\n"
+             "\tWorking directory: {}\n"
+             "\tInput directory: {}\n"
+             "\tOutput directory: {}\n\n".format(opt.dataset, opt.working_dir, opt.input_dir, opt.output_dir))
 
 if not os.path.exists(opt.output_dir):
-	os.mkdir(opt.output_dir)
+    os.mkdir(opt.output_dir)
 
+# Time it!
+start = time.time()
+
+# Parameters for bead registration. Those are optimized, and unless
+# the used knows what she/he is doing, should not be changed.
 beads_percentile = 98.0
 beads_max_mass_cutoff = 0.90  # Reject the upper right of this cutoff (in tant per 1)
 beads_min_mass_cutoff = 0.01  # Reject the upper left  of this cutoff (in tant per 1)
 if opt.bead_registration:
-	logging.info("\n\n#######################\n"
-				 "Initializing BEAD REGISTRATION \n"
-				 "############################\n\n")
-	create_beads_stacks(opt.beads_dir)
-	beads_registration(opt.beads_dir, beads_percentile, beads_min_mass_cutoff, beads_max_mass_cutoff,
-					   verbose=opt.verbose)
-	print("\tBEADS REGISTERED! \n")
+    logging.info("\n\n#######################\n"
+                 "Initializing BEAD REGISTRATION \n"
+                 "############################\n\n")
+    # Check if the beads are actually there or not:
+    if not os.path.exists(opt.beads_dir) or len(os.listdir(opt.beads_dir)) == 0:
+        sys.stderr.write('\nPICT-MODELLER-ERROR: Hey! You should drink a coffee first haha\n'
+                         'Do you have beads? You sure? Go and check it!\n'
+                         'Thanks! ;)\n\n')
+        sys.exit(1)
+    create_beads_stacks(opt.beads_dir)
+    beads_registration(opt.beads_dir, beads_percentile, beads_min_mass_cutoff, beads_max_mass_cutoff,
+                       verbose=opt.verbose)
+    print("\tBEADS REGISTERED! \n")
 
 if opt.preprocessing:
-	logging.info("\n\n#######################\n"
-				 "Initializing PREPROCESSING \n"
-				 "############################\n\n")
-	######################
-	# IMAGE PREPROCESSING
-	######################
-	pp(opt.pict_images_dir, opt.images_dir, opt.rolling_ball_radius,
-	   opt.median_filter_radius, verbose=opt.verbose)
+    logging.info("\n\n#######################\n"
+                 "Initializing PREPROCESSING \n"
+                 "############################\n\n")
+    ######################
+    # IMAGE PREPROCESSING
+    ######################
+    pp(opt.pict_images_dir, opt.images_dir, opt.rolling_ball_radius,
+       opt.median_filter_radius, verbose=opt.verbose)
 
 if opt.detect_spots:
-	logging.info("\n\n#######################\n"
-				 "Initializing SPOT DETECTION \n"
-				 "############################\n\n")
-	###########################
-	# SPOT DETECTION & LINKING
-	###########################
-	spot_detection(opt.images_dir, opt.spots_dir, opt.results_dir, opt.figures_dir,
-				   opt.particle_radius, opt.percentile, opt.min_mass_cutoff, opt.max_mass_cutoff,
-				   opt.max_displacement, verbose=opt.verbose, mass_selection=opt.mass_selection)
+    logging.info("\n\n#######################\n"
+                 "Initializing SPOT DETECTION \n"
+                 "############################\n\n")
+    ###########################
+    # SPOT DETECTION & LINKING
+    ###########################
+    spot_detection(opt.images_dir, opt.spots_dir, opt.results_dir, opt.figures_dir,
+                   opt.particle_radius, opt.percentile, opt.min_mass_cutoff, opt.max_mass_cutoff,
+                   opt.max_displacement, verbose=opt.verbose, mass_selection=opt.mass_selection)
 
 if opt.warping:
-	logging.info("\n\n#######################\n"
-				 "Initializing WARPING \n"
-				 "############################\n\n")
-	######################
-	# WARPING
-	######################
-	# Check if transformation matrix is in beads directory
-	if not os.path.exists(opt.beads_dir + "transform.npy"):
-		create_beads_stacks(opt.beads_dir)
-		beads_registration(opt.beads_dir, beads_percentile, beads_min_mass_cutoff, beads_max_mass_cutoff)
-	warping(opt.beads_dir, opt.spots_dir, opt.figures_dir, opt.results_dir)
-	plot_links(opt.images_dir + "imageMD*.tif", opt.spots_dir, opt.figures_dir + "spot_detection/")
+    logging.info("\n\n#######################\n"
+                 "Initializing WARPING \n"
+                 "############################\n\n")
+    ######################
+    # WARPING
+    ######################
+    # Check if transformation matrix is in beads directory
+    if not os.path.exists(opt.beads_dir + "transform.npy"):
+        create_beads_stacks(opt.beads_dir)
+        beads_registration(opt.beads_dir, beads_percentile, beads_min_mass_cutoff, beads_max_mass_cutoff)
+    warping(opt.beads_dir, opt.spots_dir, opt.figures_dir, opt.results_dir)
+    plot_links(opt.images_dir + "imageMD*.tif", opt.spots_dir, opt.figures_dir + "spot_detection/")
 
 if opt.segmentation_preprocess:
-	logging.info("\n\n#######################\n"
-				 "Initializing SPOT SELECTION \n"
-				 "#########################\n\n")
-	##############################
-	# SEGMENTATION PRE-PROCESSING
-	##############################
-	total_data, seg_selected = main_segmentation(opt.segment_dir, opt.images_dir, opt.spots_dir, opt.results_dir,
-												 opt.figures_dir, opt.scale_factor, opt.cont_cutoff,
-												 opt.neigh_cutoff, rescale=opt.rescale, verbose=opt.verbose)
-	plot_links(opt.segment_dir + "masks/contour_mod*.tif", opt.spots_dir,
-			   opt.figures_dir + "pp_segmented/")
+    logging.info("\n\n#######################\n"
+                 "Initializing SPOT SELECTION \n"
+                 "#########################\n\n")
+    ##############################
+    # SEGMENTATION PRE-PROCESSING
+    ##############################
+    total_data, seg_selected = main_segmentation(opt.segment_dir, opt.images_dir, opt.spots_dir, opt.results_dir,
+                                                 opt.figures_dir, opt.scale_factor, opt.cont_cutoff,
+                                                 opt.neigh_cutoff, rescale=opt.rescale, verbose=opt.verbose)
+    plot_links(opt.segment_dir + "masks/contour_mod*.tif", opt.spots_dir,
+               opt.figures_dir + "pp_segmented/")
 
 if opt.gaussian_fit:
-	##############################
-	# GAUSSIAN FITTING & SELECTION
-	##############################
-	gauss_initial, gauss_selected = main_gaussian(opt.results_dir, opt.images_dir, opt.figures_dir)
+    ##############################
+    # GAUSSIAN FITTING & SELECTION
+    ##############################
+    gauss_initial, gauss_selected = main_gaussian(opt.results_dir, opt.images_dir, opt.figures_dir)
 
 if opt.kde:
-	##############################
-	# KERNEL DENSITY ESTIMATION
-	##############################
-	kde_initial, kde_selected = main_kde(opt.images_dir, opt.results_dir, opt.figures_dir)
+    ##############################
+    # KERNEL DENSITY ESTIMATION
+    ##############################
+    kde_initial, kde_selected = main_kde(opt.images_dir, opt.results_dir, opt.figures_dir)
 
 if opt.outlier_rejection:
-	####################
-	# OUTLIER REJECTION
-	####################
-	outlier_rejection(opt.results_dir, opt.figures_dir, test=False, mu_ini=opt.mu_ini, sigma_ini=opt.sigma_ini)
+    ####################
+    # OUTLIER REJECTION
+    ####################
+    outlier_rejection(opt.results_dir, opt.figures_dir, test=False, mu_ini=opt.mu_ini, sigma_ini=opt.sigma_ini)
+
+# How much time did it take?
+end = time.time()
+print(f"\n\nTotal Process time: {round(end - start, 3)} s\n")
 
 print("\n\n#######################\n"
-	  "Analysis Done!! \n"
-	  "#########################\n\n")
+      "Analysis Done!! \n"
+      "#########################\n\n")
 
 sys.exit(0)

@@ -388,6 +388,13 @@ def main_segmentation(segment_dir, images_dir, spots_dir, results_dir, figures_d
     # SEGMENTATION
     ###############
     # Segment yeast cells if not segmented
+    # Check if detected spots are present
+    if not os.path.exists(images_dir) or len(os.listdir(images_dir)) == 0:
+        sys.stderr.write('\nPICT-MODELLER-ERROR: Oh! You have to be a master for trying to segment phantom images! \n'
+                         'You did not processed your raw images (option -pp), did you? If so, they disappeared :S\n'
+                         'I can not segment an empty folder...Please, first process your images. \n'
+                         'Thanks! ;)\n\n')
+        sys.exit(1)
     if not os.path.exists(opt.segment_dir):
         os.mkdir(segment_dir)
         segment_yeast(segment_dir, images_dir, scale_factor, rescale, verbose)  # saves contour images in output/masks/
@@ -398,6 +405,16 @@ def main_segmentation(segment_dir, images_dir, spots_dir, results_dir, figures_d
         print("\n\nCell Segmentation Finished!\n\n")
     else:
         pass
+
+    # Sort far-from-contour and/or not-isolated Spots
+    # Check if detected spots
+    if not os.path.exists(spots_dir) or len(os.listdir(spots_dir)) == 0:
+        sys.stderr.write('\nPICT-MODELLER-ERROR: Oh wow! You still trying to hack me!!\n'
+                         'You did not run spot detection (option -spt), did you? If so, I could not find any spot :S\n'
+                         'I can not proceed if I do not have info about your spots... '
+                         'Please, first process your images. \n'
+                         'Thanks! ;)\n\n')
+        sys.exit(1)
 
     percent_sel_total_W1 = list()
     percent_sel_total_W2 = list()

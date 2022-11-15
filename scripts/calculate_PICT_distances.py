@@ -37,75 +37,88 @@ def arg_parser():
     Returns the parser
     """
     parser = ArgumentParser(description='\n\n\n\t\t########################\n\n'
-                                        '\t\tPICT DETECTOR FOR IN SITU MODELING OF PROTEIN COMPLEXES\n\n'
+                                        '\t\tPICT-MODELLER\n\n'
                                         '\n\n\t\t########################\n\n'
-                                        '\tThis is a python program designed to calculate distances between '
-                                        'fluorophores '
-                                        'with a precision of 2 nm. From 2D stacks (channels Red/Green), it performs:\n '
-                                        '\t\t1. Preprocessing (Background Subtraction and Median Filter) of the '
+                                        '\tImage Analysis: \n'
+                                        '\t\tComputing the distance distribution between '
+                                        'fluorophores tagging the protein complex (e.g, exocyst) '
+                                        'with a precision up to 5 nm. From 2D stacks (channels Red/Green),'
+                                        ' it performs:\n '
+                                        '\t\t\t1. Preprocessing (Background Subtraction and Median Filter) of the '
                                         'image.\n '
-                                        '\t\t2. Chromatic aberration correction (Warping) on the red channel.\n'
-                                        '\t\t3. Spot Location on the 2 channels, Refinement of detected spots, and '
+                                        '\t\t\t2. Chromatic aberration correction (Warping) on the red channel.\n'
+                                        '\t\t\t3. Spot Location on the 2 channels, Refinement of detected spots, and '
                                         'linking between spots found in the 2 channels\n'
-                                        '\t\t4. Distance calculation based on intensity moments, eccentricity of '
-                                        'detected spots, and angle calculation\n\n')
+                                        '\t\t\t4. Distance estimation (mu and sigma) based on second momentum of '
+                                        'intensity and eccentricity, gaussian fitting, and maximum likelihood estimate'
+                                        ' of the mu and sigma parameters from the pdf function described in Churchman '
+                                        'et al., 2006.\n\n')
 
-    """parser.add_argument("-i",
-                        dest="directory",
+    parser.add_argument("-d", "--dataset",
+                        dest="dataset",
                         action="store",
                         type=str,
-                        help="Input directory where the raw PICT images are located",
+                        help="Name of the dataset where the input/ directory is located",
                         required=True)
 
-    parser.add_argument("-o",
-                        dest="output_dir",
-                        action="store",
-                        type=str,
-                        default='output',
-                        help="Name of the output directory where processed images and data will be saved")
-
-    parser.add_argument("-b",
-                        dest="beads_dir",
-                        action="store",
-                        type=str,
-                        default='beads',
-                        help="Name of the directory where the beads are for chromatic aberration correction")"""
-    parser.add_argument("-i",
-                        dest="directory",
-                        action="store",
-                        type=str,
-                        help="Input directory where the raw PICT images are located",
-                        required=True)
-    parser.add_argument('-r',
-                        dest='radius',
+    parser.add_argument('-rb', '--rolling_ball',
+                        dest='rolling_ball_radius',
                         action="store",
                         type=int,
                         default=70,
                         help="Rolling Ball Radius (pixels)")
 
-    parser.add_argument('-m',
-                        dest='median_filter',
+    parser.add_argument('-m', '--median_filter',
+                        dest='median_filter_radius',
                         action="store",
                         type=int,
                         default=10,
                         help="Median Radius (pixels)")
 
-    parser.add_argument('-w',
+    parser.add_argument('-r', '--radius',
+                        dest='particle_radius',
+                        action="store",
+                        type=int,
+                        default=11,
+                        help="For spot detection. Must be an odd number")
+
+    parser.add_argument('-pct', '--percentile',
+                        dest='percentile',
+                        action="store",
+                        type=float,
+                        default=10,
+                        help="Percentile (%) that determines which bright pixels are accepted as spots.")
+
+    parser.add_argument('-l', '--link',
+                        dest='max_displacement',
+                        action="store",
+                        type=float,
+                        default=10,
+                        help="Median Radius (pixels)")
+
+    parser.add_argument('-o',
                         '--option',
                         dest='option',
                         action="store",
                         default="main",
-                        help="Option to process: 'main' (whole workflow), 'pp' (preprocessing), "
-                             "'warping' (pp + warping), 'sl' (pp + warping + spot location&linking + "
-                             "moment calculation), 'distances' (distance estimation from spot_location tables in "
-                             "trackpy directory). Default: 'main'")
+                        help="Option to process:"
+                             " 'all' (whole workflow),"
+                             " 'beads' (bead registration),"
+                             " 'pp' (preprocessing),"
+                             " 'spt' (spot detection and linking),"
+                             " 'warping' (transform XY spot coordinates using the beads warping matrix),"
+                             " 'segment' (yeast segmentation),"
+                             " 'gaussian' (gaussian fitting),"
+                             " 'kde' (2D Kernel Density Estimate),"
+                             " 'outlier (outlier rejection using the MLE)'."
+                             " Default: 'main'")
 
     parser.add_argument('-d',
                         '--dirty',
                         dest='dirty',
                         action="store_true",
                         default=False,
-                        help="Generates an output file for each processing step to track what is happening")
+                        help="Generates an output files and figures for each processing step to track what is happening")
 
     parser.add_argument('-v',
                         '--verbose',
@@ -136,7 +149,12 @@ def pp(pict_images_dir, path_to_save_pp, rbr_radius, mf_radius, verbose=False):
         print("\n#############################\n"
               "     Image Preprocessing \n"
               "#############################\n")
-
+    # Check if detected spots are present
+    if not os.path.exists(pict_images_dir) or len(os.listdir(pict_images_dir)) == 0:
+        sys.stderr.write('\nPICT-MODELLER-ERROR: So fast!! You should drink a coffee first haha\n'
+                         'Do you have PICT images? You sure? Go and check it!\n'
+                         'Thanks! ;)\n\n')
+        sys.exit(1)
     for file in glob.glob(pict_images_dir + "*.tif"):
         try:
             # BACKGROUND SUBTRACTION, MEDIAN FILTER, WARPING
